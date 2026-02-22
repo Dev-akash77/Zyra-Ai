@@ -9,9 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "16.1.6",
+    "@hookform/resolvers": "^5.2.2",
+    "@next/swc-win32-x64-msvc": "^16.1.6",
+    "axios": "^1.13.5",
+    "next": "^16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.71.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
