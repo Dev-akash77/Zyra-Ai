@@ -20,7 +20,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:push": "drizzle-kit push",
-    "drizzle:studio":"drizzle-kit studio"
+    "drizzle:studio":"drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
+
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
