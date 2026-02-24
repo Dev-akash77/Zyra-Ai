@@ -31,7 +31,7 @@ export const profileTable = pgTable('profile_table',{
     email: varchar('email', { length: 100 }).notNull().unique(),
     verified: boolean('verified').default(false),
     suspend: boolean('suspend').default(false),
-    gender: profileGenderEnum('gender').default('male').notNull(),
+    gender: profileGenderEnum('gender'),
     updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()
     .$onUpdate(() => new Date()),
