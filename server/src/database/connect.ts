@@ -6,9 +6,9 @@ export const connectDatabase = (database_url: string) => {
   try {
     const pool = new Pool({
       connectionString: database_url,
-      ssl: {
-        rejectUnauthorized: false,
-      },
+       ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: false }
+    : false,
     });
     console.log(`POSTGRE Connected`);
     return drizzle(pool, { schema });
