@@ -7,6 +7,7 @@ import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/enums/error.code';
 import { eq, or } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,8 @@ export class AuthService {
     ) {}
 
 
-    async registerUser(dto: RegisterInterface) {
+    async registerUser(dto: RegisterDto) {
+        const { confirmPassword, ...data } = dto;
         if (!dto.name || !dto.email || !dto.password) {
             throw new AppException(
                 'All required fields must be provided',
