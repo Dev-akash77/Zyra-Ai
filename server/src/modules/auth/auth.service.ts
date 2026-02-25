@@ -2,42 +2,38 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { injection_token } from '../../common/constants/injection.token';
 import { registerTable } from '../../database/schema';
 import { profileTable } from '../../database/schema';
-import {
-  LoignInterface,
-  Registration as RegisterInterface,
-} from './inerface/register.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/enums/error.code';
 import { eq, or } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../database/schema';
+import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './inerface/token.interface';
+import { JwtPayload } from 'jsonwebtoken';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(injection_token.DB_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>, // TODO: Replace with proper DB type
+    private readonly db: NodePgDatabase<typeof schema>,
 
     private readonly jwtService: JwtService,
   ) {}
 
-  // ! Hashed Password
-  async hashedPassword(password: string) {
-    //! Hash the user's password
+  //! Hash the user's password
+  async hashedPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
   }
 
-  // ! GENERATE TOKEN
-  private async generateToken(payload: JwtPayload) {
+  // ! GENERATE JWT TOKEN
+  private async generateToken(payload: JwtPayload): Promise<string> {
     return this.jwtService.signAsync(payload);
   }
 
-  // ! Register User Service
-  async registerUser(dto: RegisterInterface) {
-    //! Validate required fields
+  // ! REGISTER USER
+  async registerUser(dto: RegisterDto) {
     if (!dto.name || !dto.email || !dto.password) {
       throw new AppException(
         'All required fields must be provided',
@@ -61,20 +57,6 @@ export class AuthService {
       );
     }
 
-    //! Check if phone number already exists
-    const existingByPhone = await this.db
-      .select()
-      .from(registerTable)
-      .where(eq(registerTable.phoneNumber, dto.phoneNumber));
-
-    //! Throw error if phone number is already registered
-    if (existingByPhone.length > 0) {
-      throw new AppException(
-        'Phone number already exists',
-        HttpStatus.CONFLICT,
-        ErrorCode.DUPLICATE_RESOURCE,
-      );
-    }
 
     //! Hash the user's password before storing
     const hashedPassword = await this.hashedPassword(dto.password);
@@ -88,9 +70,6 @@ export class AuthService {
           name: dto.name,
           email: dto.email,
           password: hashedPassword,
-          role: dto.role ?? 'user',
-          otp: dto.otp,
-          phoneNumber: dto.phoneNumber,
         })
         .returning();
 
@@ -129,11 +108,12 @@ export class AuthService {
       success: true,
       message: 'User registered successfully',
       token: token,
+      data:safeUser
     };
   }
 
-  // ! Login User
-  async loginUser(dto: LoignInterface) {
+  // ! LOGIN USER
+  async loginUser(dto: LoginDto) {
     // ! find user by email
     const users = await this.db
       .select()
@@ -169,7 +149,7 @@ export class AuthService {
 
     const token = await this.generateToken(payload);
 
-     return {
+    return {
       success: true,
       message: 'login successfully',
       token: token,

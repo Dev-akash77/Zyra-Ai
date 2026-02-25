@@ -1,9 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import type {
-  LoignInterface,
-  Registration,
-} from './inerface/register.interface';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,13 +9,13 @@ export class AuthController {
 
   // ! Register Port
   @Post('register')
-  userRegistration(@Body() UserData: Registration) {
-    return this.authService.registerUser(UserData);
+  userRegistration(@Body() dto: RegisterDto) {
+    return this.authService.registerUser(dto);
   }
 
   // ! Login Port
   @Post('login')
-  userLogin(@Body() UserData: LoignInterface) {
-    return this.authService.loginUser(UserData);
+  userLogin(@Body() dto: LoginDto) {
+    return this.authService.loginUser(dto);
   }
 }
