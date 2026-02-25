@@ -7,3 +7,8 @@ export interface Registration {
     phoneNumber: string,
     updatedAt?: Date
 }
+
+export interface LoignInterface{
+    email:string,
+    password: string
+}

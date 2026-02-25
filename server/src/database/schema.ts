@@ -11,7 +11,7 @@ export const registerTable = pgTable('register_table', {
     password:  text('password').notNull(),
     role: registerRoleEnum('role').default('user').notNull(),
     otp: varchar('otp',{length:6}),
-    phoneNumber: varchar("phone_number", { length: 15 }).unique().notNull(),
+    phoneNumber: varchar("phone_number", { length: 15 }).unique(),
     updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()
     .$onUpdate(() => new Date()),

@@ -8,6 +8,13 @@
       "when": 1771742702910,
       "tag": "0000_fuzzy_warbird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771956486981,
+      "tag": "0001_classy_marvel_zombies",
+      "breakpoints": true
     }
   ]
 }
