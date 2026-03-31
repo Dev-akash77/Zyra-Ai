@@ -105,10 +105,8 @@ export class AuthService {
     const token = await this.generateToken(payload);
 
     return {
-      success: true,
-      message: 'User registered successfully',
       token: token,
-      data:safeUser
+      user:safeUser
     };
   }
 
@@ -149,10 +147,6 @@ export class AuthService {
 
     const token = await this.generateToken(payload);
 
-    return {
-      success: true,
-      message: 'login successfully',
-      token: token,
-    };
+    return {token};
   }
 }
