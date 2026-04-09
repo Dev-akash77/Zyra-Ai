@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { jwtConfig } from './common/config/jwt.config';
+import { UserRoleController } from './user-role/user-role.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { jwtConfig } from './common/config/jwt.config';
     AuthModule,
     ProfileModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserRoleController],
   providers: [AppService],
 })
 export class AppModule {}

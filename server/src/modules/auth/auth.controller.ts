@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { success_message } from '../../common/decorators/success-message.decorators';
+import { AuthGuard } from '../../guards/auth/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -10,6 +11,7 @@ export class AuthController {
 
   // ! Register Port
   @Post('register')
+  @UseGuards(AuthGuard) // use guard for authorization jsut for testing it work or not 
   @success_message('User registered successfully')
   userRegistration(@Body() dto: RegisterDto) {
     return this.authService.registerUser(dto);
