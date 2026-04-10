@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global.exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response/response.interceptor';
+import { MyLoggerService } from './logger/logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  //! for logging
+  app.useLogger(new MyLoggerService());
 
   //! for response handler
   const reflector = app.get(Reflector);

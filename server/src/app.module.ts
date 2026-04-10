@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { jwtConfig } from './common/config/jwt.config';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { jwtConfig } from './common/config/jwt.config';
     DatabaseModule,
     AuthModule,
     ProfileModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
