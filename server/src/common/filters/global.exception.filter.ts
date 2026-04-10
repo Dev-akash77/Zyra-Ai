@@ -25,6 +25,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // ! if there is no internal server error
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+
       const res: any = exception.getResponse();
 
       errorCode = res.errorCode || errorCode;

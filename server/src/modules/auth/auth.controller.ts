@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { success_message } from '../../common/decorators/success-message.decorators';
-import { AuthGuard } from '../../guards/auth/auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Roles } from '../../common/decorators/Roles.decorator';
+import { Role } from '../../common/enums/role';
+import { RoleGuard } from '../../common/guards/role.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -11,7 +14,6 @@ export class AuthController {
 
   // ! Register Port
   @Post('register')
-  @UseGuards(AuthGuard) // use guard for authorization jsut for testing it work or not 
   @success_message('User registered successfully')
   userRegistration(@Body() dto: RegisterDto) {
     return this.authService.registerUser(dto);
@@ -23,4 +25,25 @@ export class AuthController {
   userLogin(@Body() dto: LoginDto) {
     return this.authService.loginUser(dto);  
   }
+
+
+
+  
+@UseGuards(JwtAuthGuard)
+@Get('profile')
+getProfile(@Req() req) {
+  return req.user;
+}
+
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN,)
+  createUser() {
+    return 'Admin';
+  }
+
+
+
+
+
 }
