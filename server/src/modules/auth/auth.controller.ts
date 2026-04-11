@@ -1,8 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { success_message } from '../../common/decorators/success-message.decorators';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Roles } from '../../common/decorators/Roles.decorator';
+import { Role } from '../../common/enums/role';
+import { RoleGuard } from '../../common/guards/role.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -21,4 +25,25 @@ export class AuthController {
   userLogin(@Body() dto: LoginDto) {
     return this.authService.loginUser(dto);  
   }
+
+
+
+  
+@UseGuards(JwtAuthGuard)
+@Get('profile')
+getProfile(@Req() req) {
+  return req.user;
+}
+
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(Role.ADMIN,)
+  createUser() {
+    return 'Admin';
+  }
+
+
+
+
+
 }
