@@ -6,17 +6,20 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { jwtConfig } from './common/config/jwt.config';
+import { redisConfig } from './common/config/redis.config';
+import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [jwtConfig],
+      load: [jwtConfig, redisConfig],
     }),
     DatabaseModule,
     AuthModule,
     ProfileModule,
+    RateLimitModule,
   ],
   controllers: [AppController],
   providers: [AppService],
