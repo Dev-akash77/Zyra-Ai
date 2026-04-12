@@ -1,3 +1,4 @@
 export const injection_token = {
   DB_CONNECTION: 'POSTGRESQL_INJECTION',
+  REDIS_CONNECTION: 'REDIS_INJECTION',
 };

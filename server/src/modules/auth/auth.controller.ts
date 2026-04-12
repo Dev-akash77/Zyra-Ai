@@ -7,6 +7,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Roles } from '../../common/decorators/Roles.decorator';
 import { Role } from '../../common/enums/role';
 import { RoleGuard } from '../../common/guards/role.guard';
+import { RateLimit } from '../rate-limit/rate-limit.decorator';
+import { RATE_LIMITS } from '../../common/config/ratelimit.config';
 
 @Controller('auth')
 export class AuthController {
@@ -21,29 +23,22 @@ export class AuthController {
 
   // ! Login Port
   @Post('login')
+  @RateLimit(RATE_LIMITS.LOGIN)
   @success_message('login successfully')
   userLogin(@Body() dto: LoginDto) {
-    return this.authService.loginUser(dto);  
+    return this.authService.loginUser(dto);
   }
 
-
-
-  
-@UseGuards(JwtAuthGuard)
-@Get('profile')
-getProfile(@Req() req) {
-  return req.user;
-}
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Req() req) {
+    return req.user;
+  }
 
   @Get('admin')
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles(Role.ADMIN,)
+  @Roles(Role.ADMIN)
   createUser() {
     return 'Admin';
   }
-
-
-
-
-
 }

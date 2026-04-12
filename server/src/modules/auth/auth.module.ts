@@ -13,7 +13,7 @@ import { RoleGuard } from '../../common/guards/role.guard';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
-inject: [jwtConfig.KEY],
+      inject: [jwtConfig.KEY],
       useFactory: (config: ConfigType<typeof jwtConfig>) => ({
         secret: config.secret,
         signOptions: { expiresIn: config.expiresIn as any },
@@ -21,6 +21,6 @@ inject: [jwtConfig.KEY],
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy,RoleGuard],
+  providers: [AuthService, JwtStrategy, RoleGuard],
 })
 export class AuthModule {}
