@@ -36,12 +36,15 @@
     "class-validator": "^0.14.3",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
+    "jsonwebtoken": "^9.0.3",
     "ioredis": "^5.10.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
