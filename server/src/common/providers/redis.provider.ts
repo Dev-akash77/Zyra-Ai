@@ -3,11 +3,13 @@ import { injection_token } from '../constants/injection.token';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { RedisConfigTypes } from '../types/redis.type';
+import { MyLoggerService } from '../../modules/logger/logger.service';
 
 export const RedisProvider: Provider = {
   provide: injection_token.REDIS_CONNECTION,
+    inject: [ConfigService, MyLoggerService],
 
-  useFactory: (configService: ConfigService) => {
+  useFactory: (configService: ConfigService,logger:MyLoggerService) => {
     const redis = configService.get<RedisConfigTypes>('redis');
 
     const redisData  = new Redis({
@@ -17,20 +19,19 @@ export const RedisProvider: Provider = {
     });
    // !connection established
     redisData.on('connect', () => {
-      console.log('Redis connected');
+      logger.log('Redis connected','redis');
     });
 
     //! ready to use
     redisData.on('ready', () => {
-      console.log('Redis ready to use');
+      logger.log('Redis ready to use','redis');
     });
 
     // ! error handling
     redisData.on('error', (err) => {
-      console.error('Redis error:', err.message);
+      logger.error('Redis error:' ,err.message,'logger');
     });
 
     return redisData;
   },
-  inject: [ConfigService], 
 };

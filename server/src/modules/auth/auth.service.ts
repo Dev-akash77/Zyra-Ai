@@ -12,6 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 import { LoginDto } from './dto/login.dto';
+import { MyLoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class AuthService {
@@ -20,21 +21,27 @@ export class AuthService {
     private readonly db: NodePgDatabase<typeof schema>,
 
     private readonly jwtService: JwtService,
+
+    // Logger injected for structured logging across auth flows
+    private readonly logger: MyLoggerService,
   ) {}
 
-  //! Hash the user's password
   async hashedPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
   }
 
-  // ! GENERATE JWT TOKEN
   private async generateToken(payload: JwtPayload): Promise<string> {
     return this.jwtService.signAsync(payload);
   }
 
-  // ! REGISTER USER
   async registerUser(dto: RegisterDto) {
+    // Log registration attempt (entry point tracking)
+    this.logger.log(`Register attempt: ${dto.email}`, 'AuthService');
+
     if (!dto.name || !dto.email || !dto.password) {
+      // Log missing required fields (client error visibility)
+      this.logger.warn(`Missing fields for: ${dto.email}`, 'AuthService');
+
       throw new AppException(
         'All required fields must be provided',
         HttpStatus.BAD_REQUEST,
@@ -42,14 +49,15 @@ export class AuthService {
       );
     }
 
-    //! Check if email already exists
     const existingByEmail = await this.db
       .select()
       .from(registerTable)
       .where(eq(registerTable.email, dto.email));
 
-    //! Throw error if email is already registered
     if (existingByEmail.length > 0) {
+      // Log duplicate email attempt (business validation failure)
+      this.logger.warn(`Duplicate email: ${dto.email}`, 'AuthService');
+
       throw new AppException(
         'Email already exists',
         HttpStatus.CONFLICT,
@@ -57,13 +65,9 @@ export class AuthService {
       );
     }
 
-
-    //! Hash the user's password before storing
     const hashedPassword = await this.hashedPassword(dto.password);
 
-    //! Execute registration inside a transaction
     const result = await this.db.transaction(async (tx: any) => {
-      //! Insert user into register table
       const [newUser] = await tx
         .insert(registerTable)
         .values({
@@ -73,8 +77,14 @@ export class AuthService {
         })
         .returning();
 
-      //! Ensure user was successfully created
       if (!newUser) {
+        // Log DB failure during registration (critical issue)
+        this.logger.error(
+          'Registration DB insert failed',
+          undefined,
+          'AuthService',
+        );
+
         throw new AppException(
           'Registration failed',
           HttpStatus.BAD_REQUEST,
@@ -82,7 +92,6 @@ export class AuthService {
         );
       }
 
-      //! Create related profile entry
       await tx.insert(profileTable).values({
         registerId: newUser.id,
         name: dto.name,
@@ -92,7 +101,6 @@ export class AuthService {
       return newUser;
     });
 
-    //! Remove password before returning response
     const { password, ...safeUser } = result;
 
     const payload = {
@@ -101,24 +109,33 @@ export class AuthService {
       role: result.role,
     };
 
-    // ! generate jwt token
     const token = await this.generateToken(payload);
+
+    // Log successful registration (audit trail)
+    this.logger.log(`User registered: ${result.id}`, 'AuthService');
 
     return {
       token: token,
-      user:safeUser
+      user: safeUser,
     };
   }
 
-  // ! LOGIN USER
   async loginUser(dto: LoginDto) {
-    // ! find user by email
+    // Log login attempt (tracking access attempts)
+    this.logger.log(`Login attempt: ${dto.email}`, 'AuthService');
+
     const users = await this.db
       .select()
       .from(registerTable)
       .where(eq(registerTable.email, dto.email));
 
     if (!users.length) {
+      // Log invalid login (user not found)
+      this.logger.warn(
+        `Invalid login (user not found): ${dto.email}`,
+        'AuthService',
+      );
+
       throw new AppException(
         'Invalid credentials',
         HttpStatus.UNAUTHORIZED,
@@ -126,19 +143,24 @@ export class AuthService {
       );
     }
 
-    // ! user
     const user = users[0];
 
-    // ! Compare password
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
+      // Log invalid login (wrong password)
+      this.logger.warn(
+        `Invalid login (wrong password): ${dto.email}`,
+        'AuthService',
+      );
+
       throw new AppException(
         'Invalid credentials',
         HttpStatus.UNAUTHORIZED,
         ErrorCode.INVALID_CREDENTIALS,
       );
     }
+
     const payload = {
       sub: user.id,
       email: user.email,
@@ -147,6 +169,9 @@ export class AuthService {
 
     const token = await this.generateToken(payload);
 
-    return {token};
+    // Log successful login (security + audit)
+    this.logger.log(`Login success: ${user.id}`, 'AuthService');
+
+    return { token };
   }
 }
