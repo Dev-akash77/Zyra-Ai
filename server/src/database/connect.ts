@@ -14,6 +14,6 @@ export const connectDatabase = (database_url: string, logger: MyLoggerService) =
      logger.log('PostgreSQL connected', 'Database');
     return drizzle(pool, { schema });
   } catch (error) {
-    logger.error(`POSTGRE SQL database connection failled ${error?.message}`);
+    logger.error(`POSTGRE SQL database connection failled ${error}`);
   }
 };

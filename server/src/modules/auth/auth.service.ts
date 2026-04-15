@@ -4,7 +4,7 @@ import { registerTable } from '../../database/schema';
 import { profileTable } from '../../database/schema';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/enums/error.code';
-import { eq, or } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../database/schema';
