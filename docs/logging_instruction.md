@@ -1,70 +1,126 @@
-# Logger Documentation
+# Logging System Documentation
 
-## Overview
-This project uses **Winston** logger that automatically creates
-log files every day.
+## 1. Overview
+
+This project uses a centralized logging system built with Winston.
+The logger is designed to provide:
+
+* Structured and readable console output (NestJS-style)
+* Automatic daily log file generation
+* Separation of logs by level (success, warning, error)
+* Global availability across the application
+
+The logger is implemented as a global service and can be used in any module without additional configuration.
 
 ---
 
-## Log Files Location
+## 2. Log Storage Structure
+
+All logs are stored inside the `logs/` directory at the root of the server.
+
 ```
 server/
 └── logs/
-    ├── success-YYYY-MM-DD.log   ✅ success logs
-    ├── error-YYYY-MM-DD.log     ❌ error logs
-    └── warning-YYYY-MM-DD.log   ⚠️ warning logs
+    ├── success-YYYY-MM-DD.log
+    ├── error-YYYY-MM-DD.log
+    └── warning-YYYY-MM-DD.log
 ```
-> `logs/` folder is **automatically created** when app starts.
+
+Key points:
+
+* Log files are created automatically when the application starts
+* A new file is generated each day
+* Logs are separated by type for easier debugging and monitoring
 
 ---
 
-## How to Use
+## 3. Using the Logger
 
-### Step 1 — Inject in Constructor
-```typescript
-import { MyLoggerService } from '../logger/logger.service';
+### 3.1 Injecting the Logger
+
+Inject the logger service into any class via the constructor:
+
+```ts
+import { MyLoggerService } from 'src/common/services/logger/logger.service';
 
 @Injectable()
 export class YourService {
-  constructor(private logger: MyLoggerService) {}
+  constructor(private readonly logger: MyLoggerService) {}
 }
-```
-
-### Step 2 — Use in Your Methods
-```typescript
-// ✅ Success
-this.logger.log('your message');
-
-// ❌ Error
-this.logger.error('your message');
-
-// ⚠️ Warning
-this.logger.warn('your message');
 ```
 
 ---
 
-## Real Example
-```typescript
+### 3.2 Logging Methods
+
+Use the following methods based on the situation:
+
+```ts
+// Success / informational logs
+this.logger.log('Operation completed successfully', 'ContextName');
+
+// Warning logs
+this.logger.warn('Unexpected but handled scenario', 'ContextName');
+
+// Error logs
+this.logger.error('Operation failed due to error', undefined, 'ContextName');
+```
+
+---
+
+## 4. Context Usage
+
+The second (or third in error) parameter is the **context**, which helps identify the source of the log.
+
+Example:
+
+```ts
+this.logger.log('User created successfully', 'AuthService');
+```
+
+Output:
+
+```
+[Nest] 25080  - time     LOG [AuthService] User created successfully +1ms
+```
+
+Best practice:
+
+* Always provide a meaningful context (e.g., service name)
+* Avoid generic values like "logger" or "service"
+
+---
+
+## 5. Example Implementation
+
+```ts
 @Injectable()
 export class AuthService {
-  constructor(private logger: MyLoggerService) {}
+  constructor(private readonly logger: MyLoggerService) {}
 
   async register(dto: RegisterDto) {
     try {
-      // your logic...
-      this.logger.log(`User registered: ${dto.email}`);
+      // business logic
+      this.logger.log(`User registered: ${dto.email}`, 'AuthService');
     } catch (error) {
-      this.logger.error(`Register failed: ${error.message}`);
+      this.logger.error(
+        `Register failed: ${error.message}`,
+        undefined,
+        'AuthService',
+      );
     }
   }
 
   async login(dto: LoginDto) {
     try {
-      // your logic...
-      this.logger.log(`User logged in: ${dto.email}`);
+      // business logic
+      this.logger.log(`User logged in: ${dto.email}`, 'AuthService');
     } catch (error) {
-      this.logger.error(`Login failed: ${error.message}`);
+      this.logger.error(
+        `Login failed: ${error.message}`,
+        undefined,
+        'AuthService',
+      );
     }
   }
 }
@@ -72,17 +128,80 @@ export class AuthService {
 
 ---
 
-## When to Use What
+## 6. Log Level Guidelines
 
-| Method | When | File |
-|---|---|---|
-| `this.logger.log()` | Operation succeeded | `success.log` |
-| `this.logger.error()` | Exception or failure | `error.log` |
-| `this.logger.warn()` | Suspicious activity | `warning.log` |
+| Method           | Usage Scenario                       | Output File            |
+| ---------------- | ------------------------------------ | ---------------------- |
+| `logger.log()`   | Successful operations                | success-YYYY-MM-DD.log |
+| `logger.warn()`  | Recoverable or suspicious conditions | warning-YYYY-MM-DD.log |
+| `logger.error()` | Failures, exceptions, system errors  | error-YYYY-MM-DD.log   |
 
 ---
 
-## Note
-- No need to import `LoggerModule` in every module
-- Logger is **globally available** — just inject in constructor
-- New log file created **every day** automatically
+## 7. Error Logging Best Practices
+
+* Log only the meaningful error message (avoid full stack traces unless required)
+* Keep logs short and readable
+* Prefer structured messages
+
+Example:
+
+```ts
+this.logger.error('Unable to connect to Redis', undefined, 'RedisService');
+```
+
+Avoid:
+
+```ts
+this.logger.error(error.stack);
+```
+
+---
+
+## 8. Global Availability
+
+The logger is registered as a global provider.
+
+Implications:
+
+* No need to import any logger module in feature modules
+* Direct injection is sufficient
+* Ensures consistency across the application
+
+---
+
+## 9. Console Output Format
+
+Console logs follow a structured format:
+
+```
+[Nest] PID  - timestamp     LEVEL [Context] message +Xms
+```
+
+Example:
+
+```
+[Nest] 25080  - 17/04/2026, 11:31:27 PM     LOG [AuthService] User logged in +2ms
+```
+
+---
+
+## 10. Recommendations
+
+* Always include context
+* Keep messages concise and meaningful
+* Do not log sensitive information (passwords, tokens, etc.)
+* Use appropriate log levels consistently
+
+---
+
+## 11. Summary
+
+This logging system ensures:
+
+* Consistent logging across services
+* Easy debugging and monitoring
+* Clean and readable output
+* Scalable logging for production systems
+
+All developers are expected to follow the defined logging practices to maintain consistency across the codebase.

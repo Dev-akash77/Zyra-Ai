@@ -1,47 +1,51 @@
-# 🔐 Authentication & Role Guard Documentation
+# Authentication and Authorization (JWT + RBAC)
 
-## Overview
+## 1. Overview
 
-This project uses **JWT Authentication + Role-Based Guard (RBAC)**
-to protect routes like **profile** and **admin**.
+This application implements a secure authentication and authorization system using:
 
-* JWT is used to authenticate users
-* Guards are used to protect routes
-* Roles are used to restrict access (e.g., admin only)
+* JSON Web Tokens (JWT) for authentication
+* Guards for route protection
+* Role-Based Access Control (RBAC) for authorization
+
+The system ensures that:
+
+* Only authenticated users can access protected routes
+* Access to specific resources is restricted based on user roles
 
 ---
 
-## 🔁 Authentication Flow
+## 2. Authentication Flow
 
-```
+```id="flow-auth"
 Client Request
    ↓
-JwtAuthGuard (verify token)
+JwtAuthGuard (token validation)
    ↓
 JwtStrategy.validate()
    ↓
-req.user created
+User object attached to request (req.user)
    ↓
-RoleGuard (check role)
+RoleGuard (role validation, if applied)
    ↓
 Access Granted / Denied
 ```
 
 ---
 
-## 📁 Protected Routes
+## 3. Protected Endpoints
 
-```
+```id="routes-auth"
 auth/
-├── /profile   ✅ Logged-in users only
-└── /admin     🔐 Admin only
+├── /profile   (authenticated users)
+└── /admin     (admin role only)
 ```
 
 ---
 
-## How to Use
+## 4. Usage
 
-### Step 1 — Login and Get Token
+### 4.1 Login and Retrieve Token
 
 ```http
 POST /auth/login
@@ -51,29 +55,31 @@ Response:
 
 ```json
 {
-  "access_token": "your_jwt_token"
+  "access_token": "jwt_token"
 }
 ```
 
 ---
 
-### Step 2 — Call Protected Route
+### 4.2 Access Protected Routes
+
+Example request:
 
 ```http
 GET /auth/profile
 ```
 
-### Add Header:
+Required header:
 
 ```http
-Authorization: Bearer YOUR_TOKEN
+Authorization: Bearer <access_token>
 ```
 
 ---
 
-## 👤 Profile Route (Authenticated)
+## 5. Authenticated Route Example
 
-```typescript
+```ts id="profile-route"
 @Get('profile')
 @UseGuards(JwtAuthGuard)
 getProfile(@Req() req) {
@@ -81,59 +87,62 @@ getProfile(@Req() req) {
 }
 ```
 
-### ✅ Access:
+Access:
 
-* Any valid logged-in user
+* Any authenticated user
 
-### 📤 Response:
+Response:
 
 ```json
 {
   "userId": 1,
-  "email": "test@gmail.com",
+  "email": "user@example.com",
   "role": "user"
 }
 ```
 
 ---
 
-## 🔐 Admin Route (Role Protected)
+## 6. Role-Protected Route Example
 
-```typescript
+```ts id="admin-route"
 @Get('admin')
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Roles('admin')
-createUser() {
-  return 'Admin';
+getAdminResource() {
+  return 'Admin resource';
 }
 ```
 
-### ✅ Access:
+Access:
 
 * Only users with role = `admin`
 
 ---
 
-## 🧩 Custom Roles Decorator
+## 7. Roles Decorator
 
-```typescript
+```ts id="roles-decorator"
 export const Roles = (...roles: string[]) =>
   SetMetadata('roles', roles);
 ```
 
-👉 Stores required roles as metadata
+Purpose:
+
+* Attaches required roles metadata to route handlers
+* Used later by the RoleGuard for validation
 
 ---
 
-## 🛡️ RoleGuard
+## 8. RoleGuard Implementation
 
-```typescript
+```ts id="role-guard"
 @Injectable()
 export class RoleGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext) {
-    const roles = this.reflector.getAllAndOverride('roles', [
+    const roles = this.reflector.getAllAndOverride<string[]>('roles', [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -148,31 +157,32 @@ export class RoleGuard implements CanActivate {
 }
 ```
 
-👉 This guard:
+Responsibilities:
 
-* Reads roles from metadata
+* Reads roles metadata
 * Compares with `req.user.role`
+* Grants or denies access
 
 ---
 
-## 🔑 JwtAuthGuard
+## 9. JwtAuthGuard
 
-```typescript
+```ts id="jwt-guard"
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {}
 ```
 
-👉 This guard:
+Responsibilities:
 
-* Extracts token from header
-* Verifies token
-* Calls `validate()`
+* Extracts JWT from Authorization header
+* Validates token
+* Triggers strategy validation
 
 ---
 
-## ⚙️ JwtStrategy
+## 10. JwtStrategy
 
-```typescript
+```ts id="jwt-strategy"
 async validate(payload: JwtPayload) {
   return {
     userId: payload.sub,
@@ -182,53 +192,67 @@ async validate(payload: JwtPayload) {
 }
 ```
 
-👉 This:
+Responsibilities:
 
-* Receives decoded token
-* Returns user → stored in `req.user`
-
----
-
-## 📊 Expected Results
-
-| Case                         | Result           |
-| ---------------------------- | ---------------- |
-| ✅ Valid token + correct role | Access granted   |
-| ❌ Valid token + wrong role   | 403 Forbidden    |
-| ❌ No token                   | 401 Unauthorized |
-| ❌ Invalid token              | 401 Unauthorized |
+* Receives decoded token payload
+* Returns user object
+* Attaches user to `req.user`
 
 ---
 
-## ⚠️ Important Notes
+## 11. Expected Behavior
 
-* `req.user` comes from `validate()` method
-* `SetMetadata` only stores data — Guard reads it
-* Guard order is important:
+| Scenario                       | Result           |
+| ------------------------------ | ---------------- |
+| Valid token and correct role   | Access granted   |
+| Valid token but incorrect role | 403 Forbidden    |
+| Missing token                  | 401 Unauthorized |
+| Invalid or expired token       | 401 Unauthorized |
 
-```typescript
-@UseGuards(JwtAuthGuard, RoleGuard) ✅
+---
+
+## 12. Important Notes
+
+* `req.user` is populated from the `validate()` method
+* `SetMetadata` only defines metadata; it does not enforce logic
+* Guard execution order is critical:
+
+```ts id="guard-order"
+@UseGuards(JwtAuthGuard, RoleGuard)
 ```
 
----
-
-## 🧠 When to Use What
-
-| Feature      | Purpose                 |
-| ------------ | ----------------------- |
-| JwtAuthGuard | Authenticate user       |
-| JwtStrategy  | Extract user from token |
-| validate()   | Define `req.user`       |
-| RoleGuard    | Check user role         |
-| @Roles()     | Define access rules     |
+* Authentication must always run before authorization
 
 ---
 
-## 🚀 Summary
+## 13. When to Use Each Component
 
-* JWT ensures authentication
-* Guards protect routes
-* Roles restrict access
-* Clean and scalable structure for backend systems
+| Component    | Responsibility                       |
+| ------------ | ------------------------------------ |
+| JwtAuthGuard | Authenticate requests                |
+| JwtStrategy  | Extract and validate user from token |
+| validate()   | Define structure of `req.user`       |
+| RoleGuard    | Enforce role-based access control    |
+| @Roles()     | Declare required roles for a route   |
 
 ---
+
+## 14. Best Practices
+
+* Always protect sensitive routes with guards
+* Use role-based restrictions for admin or privileged actions
+* Avoid exposing sensitive data in JWT payloads
+* Keep token payload minimal and secure
+* Maintain consistent role naming across the system
+
+---
+
+## 15. Summary
+
+This authentication system provides:
+
+* Secure user authentication using JWT
+* Scalable authorization using role-based guards
+* Clean separation of concerns between authentication and authorization
+
+All developers should follow this structure to ensure consistency, maintainability, and security across the application.
