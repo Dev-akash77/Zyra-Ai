@@ -8,12 +8,12 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ErrorCode } from '../enums/error.code';
-import { MyLoggerService } from '../../modules/logger/logger.service';
+import { MyLoggerService } from '../services/logger/logger.service';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   constructor(
-    private readonly logger: MyLoggerService, // 👈 inject logger
+    private readonly logger: MyLoggerService, //! inject logger
   ) {}
 
   catch(exception: any, host: ArgumentsHost) {
@@ -38,7 +38,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       errors = res.errors || [];
     }
 
-    // 🔥 LOG ERROR USING LOGGER (IMPORTANT)
+    //! LOG ERROR USING LOGGER (IMPORTANT)
     this.logger.error(
       `${request.method} ${request.url} - ${message}`,
       exception?.stack,

@@ -12,7 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 import { LoginDto } from './dto/login.dto';
-import { MyLoggerService } from '../logger/logger.service';
+import { MyLoggerService } from '../../common/services/logger/logger.service';
 
 @Injectable()
 export class AuthService {
