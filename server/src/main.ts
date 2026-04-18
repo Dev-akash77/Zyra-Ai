@@ -4,7 +4,8 @@ import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global.exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response/response.interceptor';
-import { MyLoggerService } from './logger/logger.service';
+import { MyLoggerService } from './common/services/logger/logger.service';
+import { RateLimitGuard } from './modules/rate-limit/rate-limit.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  // ! Global Guard (apply to nay routes)
+  app.useGlobalGuards(app.get(RateLimitGuard));
 
   //! for logging
   app.useLogger(new MyLoggerService());
@@ -25,7 +28,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor(reflector));
 
   //! for error handler
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(app.get(GlobalExceptionFilter));
   await app.listen(process.env.PORT ?? 5000);
 }
 bootstrap();

@@ -4,25 +4,30 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Inject,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ErrorCode } from '../enums/error.code';
+import { MyLoggerService } from '../services/logger/logger.service';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  constructor(
+    private readonly logger: MyLoggerService, //! inject logger
+  ) {}
+
   catch(exception: any, host: ArgumentsHost) {
-    console.error('SERVER ERROR:', exception);
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
-    // ! based on the coustom app exception
+    // ! default values
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let errorCode = ErrorCode.INTERNAL_ERROR;
     let message = 'Internal Server Error';
     let errors = [];
 
-    // ! if there is no internal server error
+    // ! handle known http exceptions
     if (exception instanceof HttpException) {
       status = exception.getStatus();
 
@@ -33,7 +38,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       errors = res.errors || [];
     }
 
-    // ! the formated final error message
+    //! LOG ERROR USING LOGGER (IMPORTANT)
+    this.logger.error(
+      `${request.method} ${request.url} - ${message}`,
+      exception?.stack,
+      'GlobalExceptionFilter',
+    );
+
+    // ! send response
     response.status(status).json({
       message,
       errorCode,

@@ -1,8 +1,9 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
+import { MyLoggerService } from '../common/services/logger/logger.service';
 
-export const connectDatabase = (database_url: string) => {
+export const connectDatabase = (database_url: string, logger: MyLoggerService) => {
   try {
     const pool = new Pool({
       connectionString: database_url,
@@ -10,9 +11,9 @@ export const connectDatabase = (database_url: string) => {
     ? { rejectUnauthorized: false }
     : false,
     });
-    console.log(`POSTGRE Connected`);
+     logger.log('PostgreSQL connected', 'Database');
     return drizzle(pool, { schema });
   } catch (error) {
-    console.log(`POSTGRE SQL database connection failled ${error}`);
+    logger.error(`POSTGRE SQL database connection failled ${error?.message}`);
   }
 };
