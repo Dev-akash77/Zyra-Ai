@@ -9,7 +9,7 @@ import { jwtConfig } from './common/config/jwt.config';
 import { LoggerModule } from './modules/logger/logger.module';
 import { redisConfig } from './common/config/redis.config';
 import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
-
+import { RedisModuleModule } from './redis-module/redis-module.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,6 +22,7 @@ import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
     ProfileModule,
     LoggerModule,
     RateLimitModule,
+    RedisModuleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

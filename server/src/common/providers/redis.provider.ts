@@ -29,8 +29,8 @@ export const RedisProvider: Provider = {
 
     // ! error handling
     redisData.on('error', (err) => {
-        console.log(err);
-      logger.error('Redis error:' ,err.message,'logger');
+        // console.log(err);
+      logger.error('Redis error:' ,err.message,'redis');
     });
 
     return redisData;
