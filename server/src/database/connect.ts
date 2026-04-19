@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
-import { MyLoggerService } from '../modules/logger/logger.service';
+import { MyLoggerService } from '../common/services/logger/logger.service';
 
 export const connectDatabase = (database_url: string, logger: MyLoggerService) => {
   try {

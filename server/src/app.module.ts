@@ -6,10 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { jwtConfig } from './common/config/jwt.config';
-import { LoggerModule } from './modules/logger/logger.module';
 import { redisConfig } from './common/config/redis.config';
 import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
 import { RedisModuleModule } from './redis-module/redis-module.module';
+import { commonModule } from './common/common.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,7 +21,7 @@ import { RedisModuleModule } from './redis-module/redis-module.module';
     DatabaseModule,
     AuthModule,
     ProfileModule,
-    LoggerModule,
+    commonModule,
     RateLimitModule,
     RedisModuleModule,
   ],

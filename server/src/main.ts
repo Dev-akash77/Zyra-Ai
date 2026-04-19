@@ -4,7 +4,7 @@ import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global.exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response/response.interceptor';
-import { MyLoggerService } from './modules/logger/logger.service';
+import { MyLoggerService } from './common/services/logger/logger.service';
 import { RateLimitGuard } from './modules/rate-limit/rate-limit.guard';
 
 async function bootstrap() {
