@@ -22,6 +22,7 @@ import { commonModule } from './common/modules/common.module';
     ProfileModule,
     commonModule,
     RateLimitModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],

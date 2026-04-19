@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import { RedisConfigTypes } from '../types/redis.type';
 import { MyLoggerService } from '../services/logger/logger.service';
 
+
 export const RedisProvider: Provider = {
   provide: injection_token.REDIS_CONNECTION,
   inject: [ConfigService, MyLoggerService],
@@ -18,7 +19,7 @@ export const RedisProvider: Provider = {
       password: redis?.password,
     });
     // !connection established
-    redisData.on('connect', () => { 
+    redisData.on('connect', () => {
       logger.log('Redis connected', 'redis');
     });
 
@@ -35,3 +36,5 @@ export const RedisProvider: Provider = {
     return redisData;
   },
 };
+
+
