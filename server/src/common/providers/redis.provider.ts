@@ -18,7 +18,7 @@ export const RedisProvider: Provider = {
       password: redis?.password,
     });
     // !connection established
-    redisData.on('connect', () => {
+    redisData.on('connect', () => { 
       logger.log('Redis connected', 'redis');
     });
 

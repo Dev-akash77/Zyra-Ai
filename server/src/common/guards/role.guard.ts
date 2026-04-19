@@ -11,7 +11,7 @@ import { ErrorCode } from '../enums/error.code';
 import { ROLES_KEY } from '../decorators/Roles.decorator';
 
 @Injectable()
-export class RoleGuard implements CanActivate {
+export class RoleGuard implements CanActivate { 
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {

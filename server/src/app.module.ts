@@ -8,7 +8,7 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { jwtConfig } from './common/config/jwt.config';
 import { redisConfig } from './common/config/redis.config';
 import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
-import { commonModule } from './common/common.module';
+import { commonModule } from './common/modules/common.module';
 
 @Module({
   imports: [
