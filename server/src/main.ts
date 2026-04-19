@@ -8,6 +8,8 @@ import { MyLoggerService } from './common/services/logger/logger.service';
 import { RateLimitGuard } from './modules/rate-limit/rate-limit.guard';
 
 async function bootstrap() {
+
+
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
@@ -21,7 +23,8 @@ async function bootstrap() {
   app.useGlobalGuards(app.get(RateLimitGuard));
 
   //! for logging
-  app.useLogger(new MyLoggerService());
+  const logger = app.get(MyLoggerService);
+  app.useLogger(logger);
 
   //! for response handler
   const reflector = app.get(Reflector);
@@ -29,6 +32,9 @@ async function bootstrap() {
 
   //! for error handler
   app.useGlobalFilters(app.get(GlobalExceptionFilter));
+
   await app.listen(process.env.PORT ?? 5000);
+  logger.log(`Server running on port ${process.env.PORT ?? 5000}`, 'Bootstrap');
+
 }
 bootstrap();
