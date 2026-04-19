@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
-import { CacheService } from '../../common/service/caching/cache.service';
-import { RedisProvider } from '../../common/providers/redis.provider';
-import { injection_token } from '../../common/constants/injection.token';
-
+import { CacheService } from '../../common/services/caching/cache.service';
 
 @Module({
   controllers: [ProfileController],
-  providers: [ProfileService,CacheService, RedisProvider]
+  providers: [ProfileService, CacheService],
 })
-export class ProfileModule {
-}
+export class ProfileModule {}

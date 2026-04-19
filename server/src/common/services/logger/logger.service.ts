@@ -11,11 +11,18 @@ export class MyLoggerService implements LoggerService {
   constructor() {
     const logDir = path.join(process.cwd(), 'logs');
 
+    // ! Create logs folder if not exists
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
 
-    //! 🔥 NestJS Style Console Format
+    //!  Level Filter (STRICT separation)
+    const levelFilter = (level: string) =>
+      winston.format((info) => {
+        return info.level === level ? info : false;
+      })();
+
+    //!  Console Format (NestJS Style)
     const consoleFormat = winston.format.printf((info) => {
       const { level, message, timestamp } = info;
       const msg = String(message);
@@ -26,12 +33,12 @@ export class MyLoggerService implements LoggerService {
 
       const pid = process.pid;
 
-      // ! Colors
+      // Colors
       const green = '\x1b[32m';
       const yellow = '\x1b[33m';
       const red = '\x1b[31m';
-      const reset = '\x1b[0m';
       const gray = '\x1b[90m';
+      const reset = '\x1b[0m';
 
       const levelMap: Record<string, string> = {
         info: 'LOG',
@@ -42,15 +49,10 @@ export class MyLoggerService implements LoggerService {
 
       const levelText = levelMap[level] || level.toUpperCase();
 
-      // !Level color
       const levelColor =
-        level === 'error'
-          ? red
-          : level === 'warn'
-          ? yellow
-          : green;
+        level === 'error' ? red : level === 'warn' ? yellow : green;
 
-      // ! Extract context
+      // Extract context
       let context = '';
       let actualMessage = msg;
 
@@ -61,14 +63,14 @@ export class MyLoggerService implements LoggerService {
       }
 
       return (
-        `${green}[Nest] ${pid}${reset}  - ${gray}${timestamp}${reset}     ` +
+        `${green}[Nest] ${pid}${reset} - ${gray}${timestamp}${reset} ` +
         `${levelColor}${levelText}${reset} ` +
         `${yellow}[${context}]${reset} ` +
         `${green}${actualMessage}${reset} ${gray}+${diff}ms${reset}`
       );
     });
 
-    //! File format (clean)
+    //!  File Format
     const fileFormat = winston.format.combine(
       winston.format.timestamp({
         format: 'YYYY-MM-DD HH:mm:ss',
@@ -79,42 +81,64 @@ export class MyLoggerService implements LoggerService {
       }),
     );
 
+    //!  Logger Setup
     this.logger = winston.createLogger({
       level: 'debug',
-      format: winston.format.timestamp({
-        format: 'DD/MM/YYYY, hh:mm:ss A',
-      }),
       transports: [
+        // !Console
         new winston.transports.Console({
-          format: consoleFormat,
+          format: winston.format.combine(
+            winston.format.timestamp({
+              format: 'DD/MM/YYYY, hh:mm:ss A',
+            }),
+            consoleFormat,
+          ),
         }),
 
+        // ! ONLY INFO
+        new winston.transports.File({
+          filename: path.join(logDir, 'info.log'),
+          format: winston.format.combine(levelFilter('info'), fileFormat),
+        }),
+
+        //! ONLY WARN
+        new winston.transports.File({
+          filename: path.join(logDir, 'warn.log'),
+          format: winston.format.combine(levelFilter('warn'), fileFormat),
+        }),
+
+        // !ONLY ERROR
         new winston.transports.File({
           filename: path.join(logDir, 'error.log'),
-          level: 'error',
-          format: fileFormat,
+          format: winston.format.combine(levelFilter('error'), fileFormat),
         }),
       ],
     });
+
+    // ! Test log (optional)
+    this.logger.info('[Logger] Logger initialized');
   }
 
+  //! Info
   log(message: string, context?: string) {
     this.logger.info(this.formatMessage(message, context));
   }
 
+  //! Warn
   warn(message: string, context?: string) {
     this.logger.warn(this.formatMessage(message, context));
   }
 
+  //! Debug
   debug(message: string, context?: string) {
     this.logger.debug(this.formatMessage(message, context));
   }
 
-  //! Clean Error (short + readable)
+  //! Error (cleaned)
   error(message: string, trace?: string, context?: string) {
     let cleanMessage = message;
 
-    //! Smart Redis / connection error formatting
+    //! Handle Redis errors nicely
     if (message.includes('ECONNREFUSED')) {
       const match = message.match(/ECONNREFUSED\s([\d.:]+)/);
       if (match) {
@@ -122,12 +146,13 @@ export class MyLoggerService implements LoggerService {
       }
     }
 
-    //! remove long stack
+    //! Remove stack noise
     cleanMessage = cleanMessage.split('\n')[0];
 
     this.logger.error(this.formatMessage(cleanMessage, context));
   }
 
+  //! Format message with context
   private formatMessage(message: string, context?: string) {
     return context ? `[${context}] ${message}` : message;
   }
