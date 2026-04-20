@@ -9,6 +9,7 @@ import * as schema from '../../database/schema';
 import { eq, or } from 'drizzle-orm';
 import { CacheService } from '../../common/services/caching/cache.service';
 import { MyLoggerService } from '../../common/services/logger/logger.service';
+import { UpdateUserDto } from './dto/profileUpdate.dto';
 
 @Injectable()
 export class ProfileService {
@@ -64,5 +65,49 @@ export class ProfileService {
 
 
     return user;
+  }
+
+
+  // ! GET THE USER ID (MUST) AND UPDATED DATA (DELETE AND RESET CAHING)
+  async update(id: string, userData: UpdateUserDto) {
+    if (!id || id === '') {
+      // Log missing required fields (client error visibility)
+      this.logger.warn(`Missing id for user profile update`, 'ProfileService');
+
+      throw new AppException(
+        'id must for user profile update',
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.MISSING_REQUIRED_FIELD,
+      );
+    }
+
+
+    const existingUser = await this.db    
+      .update(profileTable)
+      .set(userData)
+      .where(eq(profileTable.id, id))
+      .returning();
+
+    if (!existingUser || !existingUser.length) {
+      // Log missing required fields (client error visibility)
+      this.logger.warn(
+        `User not found on id:${id} user profile update`,
+        'ProfileService',
+      );
+
+      throw new AppException(
+        'User not found',
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.USER_NOT_FOUND,
+      );
+    }
+
+    // delete the cache
+    await this.cacheService.del(id);
+
+    // update it
+    await this.cacheService.set(id, existingUser);
+
+    return existingUser;
   }
 }

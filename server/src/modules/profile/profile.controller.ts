@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { ProfileService } from './profile.service';
+import { UpdateUserDto } from './dto/profileUpdate.dto';
 
 @Controller('profile')
 export class ProfileController {
@@ -12,5 +13,12 @@ export class ProfileController {
         return this.profileService.getUserData(id);
     }
     
+    @Patch('update/:id')
+    updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    ) {
+        return this.profileService.update(id, dto);
+    }
 }
  
