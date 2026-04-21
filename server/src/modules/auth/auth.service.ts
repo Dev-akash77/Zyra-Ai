@@ -45,7 +45,7 @@ export class AuthService {
       throw new AppException(
         'All required fields must be provided',
         HttpStatus.BAD_REQUEST,
-        ErrorCode.MISSING_REQUIRED_FIELD,
+        ErrorCode.MISSING_REQUIRED_FIELD, 
       );
     }
 

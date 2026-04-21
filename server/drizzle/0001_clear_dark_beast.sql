@@ -1,0 +1,1 @@
+ALTER TABLE "profile_table" ADD COLUMN "avatar_public_id" text;

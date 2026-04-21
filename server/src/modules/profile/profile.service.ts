@@ -1,15 +1,15 @@
 import { Injectable, Inject, HttpStatus } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { profileTable } from '../../database/schema';
-import Redis from 'ioredis';
 import { injection_token } from '../../common/constants/injection.token';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/enums/error.code';
 import * as schema from '../../database/schema';
-import { eq, or } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { CacheService } from '../../common/services/caching/cache.service';
 import { MyLoggerService } from '../../common/services/logger/logger.service';
 import { CloudinaryService } from '../../common/services/cloudinary/cloudinary.service';
+import { log } from 'console';
 
 @Injectable()
 export class ProfileService {
@@ -18,11 +18,12 @@ export class ProfileService {
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly logger: MyLoggerService,
     private cacheService: CacheService,
-    private cloudinary:CloudinaryService,
+    private cloudinary: CloudinaryService,
   ) {}
 
   // ! GET THE USER PROFILE DATA (CACHING || DATABASE)
-  async getUserData(id: string) {
+  async getUserData(id:string) {
+    
     //! no user id
     if (!id || id === '') {
       // Log missing required fields (client error visibility)
@@ -35,20 +36,20 @@ export class ProfileService {
       );
     }
 
-    //! get the cach data 
-    const cachDataAvailable = await this.cacheService.get(id);
-    
-    //! when cache data is available then return the cache data 
-    if(cachDataAvailable) {
-        this.logger.log(`Data found in cache id:${id}`, 'ProfileService');
-        return cachDataAvailable;
+    //! get the cach data
+    const cachDataAvailable = await this.cacheService.get(`profile:${id}`);
+
+    //! when cache data is available then return the cache data
+    if (cachDataAvailable) {
+      this.logger.log(`Data found in cache id:${id}`, 'ProfileService');
+      return cachDataAvailable;
     }
-     //! when cache data is not available then return the raw db data 
+    //! when cache data is not available then return the raw db data
     const user = await this.db
-        .select()
-        .from(profileTable)
-        .where(eq(profileTable.id,id));
-    
+      .select()
+      .from(profileTable)
+      .where(eq(profileTable.registerId , id));
+
     if (!user || user == null) {
       //! Log duplicate email attempt (business validation failure)
       this.logger.warn(`user not found id:${id}`, 'ProfileService');
@@ -61,48 +62,83 @@ export class ProfileService {
     }
 
     //! set data in cache
-    await this.cacheService.set(id,user);
-    this.logger.log(`User found success: ${id}`,'ProfileService');
-
+    await this.cacheService.set(`profile:${id}`, user);
+    this.logger.log(`User found success: ${id}`, 'ProfileService');
 
     return user;
   }
 
-
-  // !store the avatar to the db via cloudinary
-  async updateAvatar(id:string,file:Express.Multer.File){
-    if(!id){
+  // ! STORE THE IMAGE TO THE DB VIA CLOUDINARY
+  async uploadAvatar(userId: string, file: Express.Multer.File) {
+    
+    if (!userId) {
       throw new AppException(
-        'id is reequired',
+        'User id is reequired',
         HttpStatus.BAD_REQUEST,
-        ErrorCode.MISSING_REQUIRED_FIELD
-      )
+        ErrorCode.MISSING_REQUIRED_FIELD,
+      );
     }
-    if(!file){
-      new AppException(
-        'No file provided',
+    if (!file) {
+      throw new AppException(
+        'File is required',
         HttpStatus.BAD_REQUEST,
-        ErrorCode.FILE_NOT_FOUND
-      )
+        ErrorCode.FILE_NOT_FOUND,
+      );
     }
 
-    //upload to cloudinary
+    const result = await this.db
+      .select()
+      .from(profileTable)
+      .where(eq(profileTable.registerId, userId))
+      .limit(1);
+    const user = result[0];
+
+    //! If User not Found
+    if (!user) {
+      throw new AppException(
+        'User not found',
+        HttpStatus.NOT_FOUND,
+        ErrorCode.USER_NOT_FOUND,
+      );
+    }
+
+    //! Delete old avatar (if exists)
+    if (user.avatarPublicId) {
+      try {
+        await this.cloudinary.deleteFile(user.avatarPublicId);
+        this.logger.log(
+          `Old avatar deleted → ${user.avatarPublicId}`,
+          'Cloudinary',
+        );
+      } catch (err) {
+        //! Don't block flow if delete fails
+        this.logger.warn(
+          `Failed to delete old avatar → ${user.avatarPublicId}`,
+          'Cloudinary',
+        );
+      }
+    }
+
+    // ! Upload the avatar in cloudinary
     const upload = await this.cloudinary.uploadFile(file);
 
-    //save to db
+    // ! Store In DB
     await this.db
       .update(profileTable)
-      .set({avatarUrl:upload.secure_url})
-      .where(eq(profileTable.id,id))
+      .set({
+        avatarUrl: upload.secure_url,
+        avatarPublicId: upload.public_id,
+      })
+      .where(eq(profileTable.registerId, userId));
 
-      //! get the cach data 
-    const cachDataAvailable = await this.cacheService.del(id);
+    // ! Delete caching Service
+    await this.cacheService.del(`profile:${userId}`);
 
-    this.logger.log(`Avatar updated for user: ${id}`, 'ProfileService');
+    this.logger.log(`Avatar updated: ${userId}`, 'ProfileService');
 
     return {
-      success:true,
+      success: true,
       avatarUrl: upload.secure_url,
-    }
-  } 
+    };
+  }
 }
