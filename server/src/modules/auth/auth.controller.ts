@@ -8,7 +8,7 @@ import { Roles } from '../../common/decorators/Roles.decorator';
 import { Role } from '../../common/enums/role';
 import { RoleGuard } from '../../common/guards/role.guard';
 import { RateLimit } from '../rate-limit/rate-limit.decorator';
-import { RATE_LIMITS } from '../../common/config/ratelimit.config';
+import { RATE_LIMITS } from './../../common/constants/ratelimit.config';
 
 @Controller('auth')
 export class AuthController {
@@ -29,16 +29,16 @@ export class AuthController {
     return this.authService.loginUser(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Req() req) {
-    return req.user;
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Get('profile')
+  // getProfile(@Req() req) {
+  //   return req.user;
+  // }
 
-  @Get('admin')
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles(Role.ADMIN)
-  createUser() {
-    return 'Admin';
-  }
+  // @Get('admin')
+  // @UseGuards(JwtAuthGuard, RoleGuard)
+  // @Roles(Role.ADMIN)
+  // createUser() {
+  //   return 'Admin';
+  // }
 }
