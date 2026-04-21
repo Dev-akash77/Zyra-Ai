@@ -8,9 +8,9 @@ import * as schema from '../../database/schema';
 import { eq } from 'drizzle-orm';
 import { CacheService } from '../../common/services/caching/cache.service';
 import { MyLoggerService } from '../../common/services/logger/logger.service';
-import { UpdateUserDto } from './dto/profileUpdate.dto';
 import { CloudinaryService } from '../../common/services/cloudinary/cloudinary.service';
 import { log } from 'console';
+import { UpdateUserDto } from './dto/profileUpdate.dto';
 
 @Injectable()
 export class ProfileService {
@@ -23,8 +23,7 @@ export class ProfileService {
   ) {}
 
   // ! GET THE USER PROFILE DATA (CACHING || DATABASE)
-  async getUserData(id:string) {
-    
+  async getUserData(id: string) {
     //! no user id
     if (!id || id === '') {
       // Log missing required fields (client error visibility)
@@ -49,7 +48,7 @@ export class ProfileService {
     const user = await this.db
       .select()
       .from(profileTable)
-      .where(eq(profileTable.registerId , id));
+      .where(eq(profileTable.registerId, id));
 
     if (!user || user == null) {
       //! Log duplicate email attempt (business validation failure)
@@ -69,21 +68,8 @@ export class ProfileService {
     return user;
   }
 
-
-  // ! GET THE USER ID (MUST) AND UPDATED DATA (DELETE AND RESET CAHING)
-  async update(id: string, userData: UpdateUserDto) {
-    if (!id || id === '') {
-      // Log missing required fields (client error visibility)
-      this.logger.warn(`Missing id for user profile update`, 'ProfileService');
-
-      throw new AppException(
-        'id must for user profile update',
-        
-        
-        
   // ! STORE THE IMAGE TO THE DB VIA CLOUDINARY
   async uploadAvatar(userId: string, file: Express.Multer.File) {
-    
     if (!userId) {
       throw new AppException(
         'User id is reequired',
@@ -91,24 +77,6 @@ export class ProfileService {
         ErrorCode.MISSING_REQUIRED_FIELD,
       );
     }
-
-
-    const existingUser = await this.db    
-      .update(profileTable)
-      .set(userData)
-      .where(eq(profileTable.id, id))
-      .returning();
-
-    if (!existingUser || !existingUser.length) {
-      // Log missing required fields (client error visibility)
-      this.logger.warn(
-        `User not found on id:${id} user profile update`,
-        'ProfileService',
-      );
-
-      throw new AppException(
-        'User not found',
-        HttpStatus.BAD_REQUEST,
     if (!file) {
       throw new AppException(
         'File is required',
@@ -133,13 +101,6 @@ export class ProfileService {
       );
     }
 
-    // delete the cache
-    await this.cacheService.del(id);
-
-    // update it
-    await this.cacheService.set(id, existingUser);
-
-    return existingUser;
     //! Delete old avatar (if exists)
     if (user.avatarPublicId) {
       try {
@@ -177,6 +138,57 @@ export class ProfileService {
     return {
       success: true,
       avatarUrl: upload.secure_url,
+    };
+  }
+
+  //! UPDATE USER DATA
+  async update(id: string, userData: UpdateUserDto) {
+    if (!id) {
+      this.logger.warn(`Missing id for user profile update`, 'ProfileService');
+
+      throw new AppException(
+        'id must for user profile update',
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.MISSING_REQUIRED_FIELD,
+      );
+    }
+
+    //! update DB
+    const result = await this.db
+      .update(profileTable)
+      .set({
+        ...userData,
+        updatedAt: new Date(),
+      })
+      .where(eq(profileTable.registerId, id))
+      .returning();
+
+    const updatedUser = result[0];
+
+    //! user not found
+    if (!updatedUser) {
+      this.logger.warn(
+        `User not found on id:${id} profile update`,
+        'ProfileService',
+      );
+
+      throw new AppException(
+        'User not found',
+        HttpStatus.NOT_FOUND,
+        ErrorCode.USER_NOT_FOUND,
+      );
+    }
+
+    // ! cache removed
+    await this.cacheService.del(`profile:${id}`);
+    //! update cache
+    await this.cacheService.set(`profile:${id}`, updatedUser);
+
+    this.logger.log(`Profile updated: ${id}`, 'ProfileService');
+
+    //! return clean response
+    return {
+      data: updatedUser,
     };
   }
 }
