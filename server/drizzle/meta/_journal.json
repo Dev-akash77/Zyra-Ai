@@ -8,6 +8,13 @@
       "when": 1774982228129,
       "tag": "0000_curious_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776754138878,
+      "tag": "0001_clear_dark_beast",
+      "breakpoints": true
     }
   ]
 }
