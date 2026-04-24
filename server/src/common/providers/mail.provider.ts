@@ -17,7 +17,7 @@ export const MailProvider: Provider = {
     const config = configService.get<MailConfigTypes>('mail');
 
     if (!config) {
-      logger.error('Mail config missing', '', 'Mail');
+      logger.error('Mail config missing', '', 'MailProvider');
       throw new Error('Mail config missing');
     }
 
@@ -31,7 +31,7 @@ export const MailProvider: Provider = {
       },
     });
 
-    logger.log('Mail configured successfully', 'Mail');
+    logger.log('Mail configured successfully', 'MailProvider');
 
     return transporter;
   },
