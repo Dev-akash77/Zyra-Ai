@@ -10,10 +10,7 @@ export const MailProvider: Provider = {
   provide: injection_token.NODEMAILER_CONNECTION,
   inject: [ConfigService, MyLoggerService],
 
-  useFactory: (
-    configService: ConfigService,
-    logger: MyLoggerService,
-  ) => {
+  useFactory: async (configService: ConfigService, logger: MyLoggerService) => {
     const config = configService.get<MailConfigTypes>('mail');
 
     if (!config) {
@@ -24,14 +21,22 @@ export const MailProvider: Provider = {
     const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
-      secure: false, // true for 465, false for 587
+      secure: false, //! true for 465, false for 587
       auth: {
         user: config.user,
         pass: config.pass,
       },
     });
 
-    logger.log('Mail configured successfully', 'MailProvider');
+    try {
+      // ! verify node mailer
+      await transporter.verify();
+      logger.log('Mail server connected', 'MailProvider');
+    } catch (error: any) {
+      // ! not verify then show and through error
+      logger.error('Mail connection failed', error.message, 'MailProvider');
+      throw new Error(`SMTP Connection Failed: ${error.message}`);
+    }
 
     return transporter;
   },

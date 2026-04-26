@@ -1,12 +1,8 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { success_message } from '../../common/decorators/success-message.decorators';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { Roles } from '../../common/decorators/Roles.decorator';
-import { Role } from '../../common/enums/role';
-import { RoleGuard } from '../../common/guards/role.guard';
 import { RateLimit } from '../rate-limit/rate-limit.decorator';
 import { RATE_LIMITS } from './../../common/constants/ratelimit.config';
 

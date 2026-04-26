@@ -13,39 +13,43 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 import { LoginDto } from './dto/login.dto';
 import { MyLoggerService } from '../../common/services/logger/logger.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(injection_token.DB_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
-
     private readonly jwtService: JwtService,
+    private readonly notificationService: NotificationService,
 
-    // Logger injected for structured logging across auth flows
+    //! Logger injected for structured logging across auth flows
     private readonly logger: MyLoggerService,
   ) {}
 
+  //! HASHED THE PASSWORD (ENCRYPTION)
   async hashedPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
   }
 
+  //! GENERATE JWT TOKEN FOR AUTHORIZATION
   private async generateToken(payload: JwtPayload): Promise<string> {
     return this.jwtService.signAsync(payload);
   }
 
+  //! REGISTER USER
   async registerUser(dto: RegisterDto) {
-    // Log registration attempt (entry point tracking)
+    //! Log registration attempt (entry point tracking)
     this.logger.log(`Register attempt: ${dto.email}`, 'AuthService');
 
     if (!dto.name || !dto.email || !dto.password) {
-      // Log missing required fields (client error visibility)
+      //! Log missing required fields (client error visibility)
       this.logger.warn(`Missing fields for: ${dto.email}`, 'AuthService');
 
       throw new AppException(
         'All required fields must be provided',
         HttpStatus.BAD_REQUEST,
-        ErrorCode.MISSING_REQUIRED_FIELD, 
+        ErrorCode.MISSING_REQUIRED_FIELD,
       );
     }
 
@@ -55,7 +59,7 @@ export class AuthService {
       .where(eq(registerTable.email, dto.email));
 
     if (existingByEmail.length > 0) {
-      // Log duplicate email attempt (business validation failure)
+      //! Log duplicate email attempt (business validation failure)
       this.logger.warn(`Duplicate email: ${dto.email}`, 'AuthService');
 
       throw new AppException(
@@ -78,7 +82,7 @@ export class AuthService {
         .returning();
 
       if (!newUser) {
-        // Log DB failure during registration (critical issue)
+        //! Log DB failure during registration (critical issue)
         this.logger.error(
           'Registration DB insert failed',
           undefined,
@@ -111,8 +115,19 @@ export class AuthService {
 
     const token = await this.generateToken(payload);
 
-    // Log successful registration (audit trail)
+    //! Log successful registration (audit trail)
     this.logger.log(`User registered: ${result.id}`, 'AuthService');
+
+    // ! SEND WELCOME EMAIL TO THE REGISTERD USER
+    const info = await this.notificationService.sendWelcomeEmail(
+      result.name,
+      result.email,
+    );
+
+    this.logger.log(
+      `Welcome email sent to ${safeUser.name} with email: ${safeUser.email} | MessageId: ${info.messageId}`,
+      'AuthService',
+    );
 
     return {
       token: token,
@@ -120,6 +135,7 @@ export class AuthService {
     };
   }
 
+  //! LOGIN USER
   async loginUser(dto: LoginDto) {
     // Log login attempt (tracking access attempts)
     this.logger.log(`Login attempt: ${dto.email}`, 'AuthService');

@@ -23,6 +23,6 @@ export const CloudnirayProvider: Provider = {
     });
 
     logger.log('Cloudinary configured successfully', 'Cloudinary');
-    return cloudinary;
+    return cloudinaryData;
   },
 };

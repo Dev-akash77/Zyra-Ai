@@ -7,14 +7,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RoleGuard } from '../../common/guards/role.guard';
-import { MailService } from '../../common/services/mail/mail.service';
+import { NotificationModule } from '../notification/notification.module';
 
+ 
 @Module({
   imports: [
     PassportModule,
+    NotificationModule,
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
-      inject: [jwtConfig.KEY],
+inject: [jwtConfig.KEY],
       useFactory: (config: ConfigType<typeof jwtConfig>) => ({
         secret: config.secret,
         signOptions: { expiresIn: config.expiresIn as any },
@@ -22,6 +24,6 @@ import { MailService } from '../../common/services/mail/mail.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RoleGuard,MailService],
+  providers: [AuthService, JwtStrategy, RoleGuard],
 })
 export class AuthModule {}

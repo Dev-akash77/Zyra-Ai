@@ -19,7 +19,8 @@ import { success_message } from '../../common/decorators/success-message.decorat
 @Controller('profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
-  //!     GET USER DATA
+  
+  //!  GET USER DATA
   @Get('')
   @UseGuards(JwtAuthGuard)
   async userData(@Req() req) {
