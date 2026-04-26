@@ -10,13 +10,14 @@ import { redisConfig } from './common/config/redis.config';
 import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
 import { commonModule } from './common/modules/common.module';
 import { cloudinaryConfig } from './common/config/cloudinary.config';
+import { mailConfig } from './common/config/mail.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [jwtConfig, redisConfig,cloudinaryConfig],
+      load: [jwtConfig, redisConfig,cloudinaryConfig,mailConfig],
     }),
     DatabaseModule,
     AuthModule,
