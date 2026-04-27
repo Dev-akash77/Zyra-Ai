@@ -9,7 +9,6 @@ import { eq } from 'drizzle-orm';
 import { CacheService } from '../../common/services/caching/cache.service';
 import { MyLoggerService } from '../../common/services/logger/logger.service';
 import { CloudinaryService } from '../../common/services/cloudinary/cloudinary.service';
-import { log } from 'console';
 import { UpdateUserDto } from './dto/profileUpdate.dto';
 
 @Injectable()

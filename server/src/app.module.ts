@@ -11,6 +11,7 @@ import { RateLimitModule } from './modules/rate-limit/rate-limit.module';
 import { commonModule } from './common/modules/common.module';
 import { cloudinaryConfig } from './common/config/cloudinary.config';
 import { mailConfig } from './common/config/mail.config';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { mailConfig } from './common/config/mail.config';
     ProfileModule,
     commonModule,
     RateLimitModule,
+    NotificationModule,
     
   ],
   controllers: [AppController],
