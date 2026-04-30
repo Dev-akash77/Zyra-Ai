@@ -17,15 +17,15 @@ export class ProfileService {
     @Inject(injection_token.DB_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly logger: MyLoggerService,
-    private cacheService: CacheService,
-    private cloudinary: CloudinaryService,
+    private readonly cacheService: CacheService,
+    private readonly cloudinary: CloudinaryService,
   ) {}
 
   // ! GET THE USER PROFILE DATA (CACHING || DATABASE)
   async getUserData(id: string) {
     //! no user id
     if (!id || id === '') {
-      // Log missing required fields (client error visibility)
+      //! Log missing required fields (client error visibility)
       this.logger.warn(`Missing id for user profile`, 'ProfileService');
 
       throw new AppException(
@@ -139,7 +139,7 @@ export class ProfileService {
       avatarUrl: upload.secure_url,
     };
   }
-
+ 
   //! UPDATE USER DATA
   async update(id: string, userData: UpdateUserDto) {
     if (!id) {
