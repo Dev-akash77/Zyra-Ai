@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -7,6 +16,7 @@ import { success_message } from '../../common/decorators/success-message.decorat
 import { RateLimit } from '../rate-limit/rate-limit.decorator';
 import { RATE_LIMITS } from './../../common/constants/ratelimit.config';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -27,6 +37,27 @@ export class AuthController {
     return this.authService.loginUser(dto);
   }
 
+
+  //! Forget Password Port
+  @Patch('forget/password')
+  @UseGuards(JwtAuthGuard)
+  @RateLimit(RATE_LIMITS.STRICT)
+  @success_message('OTP Send Successfully')
+  forgetPassword(@Body() dto: ForgotPassword) {
+    return this.authService.forgetPassword(dto);
+  }
+
+  @Patch('reset/password')
+  @UseGuards(JwtAuthGuard)
+  @RateLimit(RATE_LIMITS.STRICT)
+  @success_message('Passwor Reset Successfully')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
+}
+
+
+
   // @UseGuards(JwtAuthGuard)
   // @Get('profile')
   // getProfile(@Req() req) {
@@ -39,17 +70,3 @@ export class AuthController {
   // createUser() {
   //   return 'Admin';
   // }
-
-  @Post('forgot-password')
-  @success_message('Otp send Successfully')
-  forgetPassword(@Body() dto:ForgotPassword){
-    return this.authService.forgetPassword(dto);
-  }
-
-  @Post('reset-password')
-  @success_message('reset password successfully')
-  resetPassword(@Body() dto:ResetPasswordDto){
-    return this.authService.resetPassword(dto)
-  }
-  
-}

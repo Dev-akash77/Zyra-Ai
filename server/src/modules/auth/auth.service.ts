@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { injection_token } from '../../common/constants/injection.token';
 import { registerTable } from '../../database/schema';
 import { profileTable } from '../../database/schema';
@@ -16,6 +16,7 @@ import { MyLoggerService } from '../../common/services/logger/logger.service';
 import { NotificationService } from '../notification/notification.service';
 import { ForgotPassword } from './dto/forgotPassword.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
+import { CacheService } from '../../common/services/caching/cache.service';
 
 @Injectable()
 export class AuthService {
@@ -24,8 +25,7 @@ export class AuthService {
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService,
-
-    //! Logger injected for structured logging across auth flows
+    private readonly cacheService: CacheService,
     private readonly logger: MyLoggerService,
   ) {}
 
@@ -139,7 +139,7 @@ export class AuthService {
 
   //! LOGIN USER
   async loginUser(dto: LoginDto) {
-    // Log login attempt (tracking access attempts)
+    //! Log login attempt (tracking access attempts)
     this.logger.log(`Login attempt: ${dto.email}`, 'AuthService');
 
     const users = await this.db
@@ -193,18 +193,18 @@ export class AuthService {
     return { token };
   }
 
-  //!forgot password
-  async forgetPassword(dto:ForgotPassword){
-    //Log forget password attempt 
-    this.logger.log(`forget password attempt:${dto.email}`,'AuthService')
+  //! FORGET PASSWORD
+  async forgetPassword(dto: ForgotPassword) {
+    //! Log forget password attempt
+    this.logger.log(`Forget Password Attempt:${dto.email}`, 'AuthService');
 
     const users = await this.db
       .select()
       .from(registerTable)
-      .where(eq(registerTable.email,dto.email));
-    
-    if(!users.length){
-      //if email is not found means that particular user
+      .where(eq(registerTable.email, dto.email));
+
+    //!if email not found it means that particular user is not valid user
+    if (!users.length) {
       this.logger.warn(
         `Invalid email(user not found):${dto.email}`,
         'AuthService',
@@ -213,98 +213,113 @@ export class AuthService {
       throw new AppException(
         'Invalid credentials',
         HttpStatus.UNAUTHORIZED,
-        ErrorCode.INVALID_CREDENTIALS
+        ErrorCode.INVALID_CREDENTIALS,
       );
-
     }
-    
+
     const user = users[0];
-    //generate otp
+    //! generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    //save the otp ot db
+    //! save the otp ot db
     await this.db
       .update(registerTable)
-      .set({otp})
-      .where(eq(registerTable.email,dto.email));
+      .set({ otp })
+      .where(eq(registerTable.email, dto.email));
 
-    //sent otp via email
-    await this.notificationService.sendOtpEmail(otp,dto.email);
-    
-    //log successful otp sent
-    this.logger.log(`otp send successfully:${user.id}`,'AuthService');
+    //! sent otp via email
+    await this.notificationService.sendOtpEmail(otp, dto.email);
 
-    return {
-      "message":"otp send successfully"
-    }
+    //! log successful otp sent
+    this.logger.log(`otp send successfully:${user.id}`, 'AuthService');
 
+    return false;
   }
 
-  //reset password
-  async resetPassword(dto:ResetPasswordDto){
-    
-    //log reset password attempt
-    this.logger.log(`reset password attempt:${dto.email}`,`AuthService`);
+  //! RESET PASSWORD
+  async resetPassword(dto: ResetPasswordDto) {
+    //! log reset password attempt
+    this.logger.log(`reset password attempt:${dto.email}`, `AuthService`);
 
     const users = await this.db
       .select()
       .from(registerTable)
-      .where(eq(registerTable.email,dto.email))
+      .where(eq(registerTable.email, dto.email));
 
-      const user = users[0];
-      //if no account found
-      if(!user){
-        this.logger.warn(`Account is ot found with this email`);
-        throw new NotFoundException(`No Account found with this email`);
-      }
+    const user = users[0];
 
-      //if otp is not found
-      if(!user.otp){
-        this.logger.warn('No otp was requested for this email')
-        throw new BadRequestException('No otp was requested for this email')
-      }
+    //! if no account found
+    if (!user) {
+      this.logger.warn(`Account is ot found with this email`);
 
-      //if otp is not matched
-      if(user.otp!==dto.otp){
-        this.logger.error('otp is not matched');
-        throw new BadRequestException('Invalid Otp')
-      }
+      throw new AppException(
+        `No Account found with this email`,
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+      );
+    }
 
-      //if otp time is not available
-      if (!user.updatedAt) {
-        throw new BadRequestException('OTP time not available');
-      }
+    //! if otp is not found
+    if (!user.otp) {
+      this.logger.warn('No otp was requested for this email');
 
-      
-      //check otp is expired or not
-      const otp_expire_time = 10*60*1000;
-      const otp_age = Date.now() - user.updatedAt.getTime();
+      throw new AppException(
+        `No otp was requested for this email`,
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+      );
+    }
 
-      //if reach expirytime
-      if(otp_age>otp_expire_time){
+    //! if otp is not matched
+    if (user.otp !== dto.otp) {
+      this.logger.error('otp is not matched');
+      throw new AppException(
+        `Invalid OTP`,
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.INVALID_INPUT,
+      );
+    }
 
-        await this.db
-          .update(registerTable)
-          .set({otp:null})
-          .where(eq(registerTable.email,dto.email))
+    //! if otp time is not available
+    if (!user.updatedAt) {
+      throw new AppException(
+        `No otp was requested for this email`,
+        HttpStatus.NOT_ACCEPTABLE,
+        ErrorCode.ACCESS_DENIED,
+      );
+    }
 
-      throw new BadRequestException('Otp expired please request again');    
-      }
+    //! check otp is expired or not
+    const otp_expire_time = 5 * 60 * 1000;
+    const otp_age = Date.now() - user.updatedAt.getTime();
 
-      //hash new password
-      const hashedPassword = await this.hashedPassword(dto.newPassword);
-
-      //update password
+    //! if reach expirytime
+    if (otp_age > otp_expire_time) {
       await this.db
+        .update(registerTable)
+        .set({ otp: null })
+        .where(eq(registerTable.email, dto.email));
+
+      throw new AppException(
+        `OTP expired please request again`,
+        HttpStatus.NOT_ACCEPTABLE,
+        ErrorCode.ACCESS_DENIED,
+      );
+    }
+
+    //!hash new password
+    const hashedPassword = await this.hashedPassword(dto.password);
+
+    //! update password
+    await this.db
       .update(registerTable)
       .set({
-        password:hashedPassword,
-        otp:null
+        password: hashedPassword,
+        otp: null,
       })
-      .where(eq(registerTable.email,dto.email))
+      .where(eq(registerTable.email, dto.email));
 
-      this.logger.log(`Password reset for user: ${user.id}`, 'AuthService');
+    this.logger.log(`Password reset for user: ${user.id}`, 'AuthService');
 
-      return {message:'password update successfully'};
-
- }
+    return false;
+  }
 }
