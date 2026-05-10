@@ -14,7 +14,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPassword } from './dto/forgotPassword.dto';
 import { success_message } from '../../common/decorators/success-message.decorators';
 import { RateLimit } from '../rate-limit/rate-limit.decorator';
-import { RATE_LIMITS } from './../../common/constants/ratelimit.config';
+import { RATE_LIMITS } from '../../common/constants/rate_limit/ratelimit.config';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 

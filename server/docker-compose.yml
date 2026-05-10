@@ -1,12 +1,28 @@
 services:
+
+#? -----------------------------REDIS------------------------------------
  redis:
     image: redis/redis-stack:latest
     container_name: redis
     ports:
-      - "6379:6379"
-      - "8001:8001"
+      - "6379:6379" # app connection
+      - "8001:8001" # GUI
     networks:
       - app-network
+
+  #? --------------------RabitMQ--------------------------------------
+ rabbitmq:
+  image: rabbitmq:3-management
+  container_name: rabbitmq
+  ports:
+      - "5672:5672"   # app connection
+      - "15672:15672" # GUI
+  environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+  networks:
+      - app-network
+# ? ========================================================================================
 
 networks:
   app-network:

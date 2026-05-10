@@ -2,7 +2,7 @@ import { Injectable, Inject, HttpStatus } from '@nestjs/common';
 import * as streamifier from 'streamifier';
 import { v2 as cloudinaryLib, UploadApiResponse } from 'cloudinary';
 
-import { injection_token } from '../../constants/injection.token';
+import { injection_token } from '../../constants/injection/injection.token';
 import { MyLoggerService } from '../logger/logger.service';
 import { AppException } from '../../exceptions/app.exception';
 import { ErrorCode } from '../../enums/error.code';

@@ -1,7 +1,7 @@
 import { Injectable, Inject, HttpStatus } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { profileTable } from '../../database/schema';
-import { injection_token } from '../../common/constants/injection.token';
+import { injection_token } from '../../common/constants/injection/injection.token';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/enums/error.code';
 import * as schema from '../../database/schema';

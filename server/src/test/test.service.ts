@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { injection_token } from '../common/constants/injection.token';
+import { injection_token } from '../common/constants/injection/injection.token';
 import { registerTable } from '../database/schema';
 
 @Injectable()

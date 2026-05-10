@@ -1,5 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { injection_token } from '../../common/constants/injection.token';
+import { injection_token } from '../../common/constants/injection/injection.token';
 import Redis from 'ioredis';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/enums/error.code';

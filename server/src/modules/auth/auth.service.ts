@@ -1,5 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { injection_token } from '../../common/constants/injection.token';
+import { injection_token } from '../../common/constants/injection/injection.token';
 import { registerTable } from '../../database/schema';
 import { profileTable } from '../../database/schema';
 import { AppException } from '../../common/exceptions/app.exception';
