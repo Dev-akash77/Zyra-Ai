@@ -7,3 +7,4 @@ export const redisConfig = registerAs('redis', () => ({
 
   password: process.env.REDIS_PASSWORD || undefined,
 }));
+ 

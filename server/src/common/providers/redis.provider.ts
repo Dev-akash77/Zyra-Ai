@@ -1,5 +1,5 @@
 import { Provider } from '@nestjs/common';
-import { injection_token } from '../constants/injection.token';
+import { injection_token } from '../constants/injection/injection.token';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { RedisConfigTypes } from '../types/redis.type';

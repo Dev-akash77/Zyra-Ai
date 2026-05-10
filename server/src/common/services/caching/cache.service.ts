@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { injection_token } from '../../constants/injection.token';
+import { injection_token } from '../../constants/injection/injection.token';
 import Redis from 'ioredis';
 
 @Injectable()

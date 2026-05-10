@@ -12,13 +12,15 @@ import { commonModule } from './common/modules/common.module';
 import { cloudinaryConfig } from './common/config/cloudinary.config';
 import { mailConfig } from './common/config/mail.config';
 import { NotificationModule } from './modules/notification/notification.module';
+import { RmqService } from './common/services/rmq/rmq.service';
+import { rmqConfig } from './common/config/rmq.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [jwtConfig, redisConfig,cloudinaryConfig,mailConfig],
+      load: [jwtConfig, redisConfig,cloudinaryConfig,mailConfig,rmqConfig],
     }),
     DatabaseModule,
     AuthModule,
@@ -29,6 +31,6 @@ import { NotificationModule } from './modules/notification/notification.module';
     
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, RmqService],
 })
 export class AppModule {}

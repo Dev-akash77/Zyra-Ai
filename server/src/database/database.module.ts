@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { injection_token } from '../common/constants/injection.token';
+import { injection_token } from '../common/constants/injection/injection.token';
 import { connectDatabase } from './connect';
 import { MyLoggerService } from '../common/services/logger/logger.service';
 
