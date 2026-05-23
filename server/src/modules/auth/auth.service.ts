@@ -17,9 +17,15 @@ import { NotificationService } from '../notification/notification.service';
 import { ForgotPassword } from './dto/forgotPassword.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import { CacheService } from '../../common/services/caching/cache.service';
+import { RmqService } from '../../common/services/rmq/rmq.service';
+import { QUEUE } from '../../common/constants/queue/queue.constant';
+import { EVENTS } from '../../common/constants/queue/event.constant';
 
 @Injectable()
 export class AuthService {
+  // ! NOTIFICATION MODULE QUEUE
+  private mailclient;
+
   constructor(
     @Inject(injection_token.DB_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
@@ -27,19 +33,22 @@ export class AuthService {
     private readonly notificationService: NotificationService,
     private readonly cacheService: CacheService,
     private readonly logger: MyLoggerService,
-  ) {}
+    private readonly rmq: RmqService,
+  ) {
+    this.mailclient = this.rmq.getClient(QUEUE.MAIL);
+  }
 
-  //! HASHED THE PASSWORD (ENCRYPTION)
+  //! HASHED THE PASSWORD (ENCRYPTION) =====================================================================================
   async hashedPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
   }
 
-  //! GENERATE JWT TOKEN FOR AUTHORIZATION
+  //! GENERATE JWT TOKEN FOR AUTHORIZATION ===================================================================================
   private async generateToken(payload: JwtPayload): Promise<string> {
     return this.jwtService.signAsync(payload);
   }
 
-  //! REGISTER USER
+  //! REGISTER USER ========================================================================================================
   async registerUser(dto: RegisterDto) {
     //! Log registration attempt (entry point tracking)
     this.logger.log(`Register attempt: ${dto.email}`, 'AuthService');
@@ -120,14 +129,14 @@ export class AuthService {
     //! Log successful registration (audit trail)
     this.logger.log(`User registered: ${result.id}`, 'AuthService');
 
-    // ! SEND WELCOME EMAIL TO THE REGISTERD USER
-    const info = await this.notificationService.sendWelcomeEmail(
-      result.name,
-      result.email,
-    );
+    // ! SEND WELCOME EMAIL TO THE REGISTERD USER VIA EVENTS
+    this.mailclient.emit(EVENTS.AUTH_USER_REGISTERED, {
+      name: result.name,
+      email: result.email,
+    });
 
     this.logger.log(
-      `Welcome email sent to ${safeUser.name} with email: ${safeUser.email} | MessageId: ${info.messageId}`,
+      `Welcome email event queued for ${result.email}`,
       'AuthService',
     );
 
@@ -137,7 +146,7 @@ export class AuthService {
     };
   }
 
-  //! LOGIN USER
+  //! LOGIN USER ========================================================================================================
   async loginUser(dto: LoginDto) {
     //! Log login attempt (tracking access attempts)
     this.logger.log(`Login attempt: ${dto.email}`, 'AuthService');
@@ -193,7 +202,7 @@ export class AuthService {
     return { token };
   }
 
-  //! FORGET PASSWORD
+  //! FORGET PASSWORD ========================================================================================================
   async forgetPassword(dto: ForgotPassword) {
     //! Log forget password attempt
     this.logger.log(`Forget Password Attempt:${dto.email}`, 'AuthService');
@@ -235,7 +244,7 @@ export class AuthService {
     return false;
   }
 
-  //! RESET PASSWORD
+  //! RESET PASSWORD ========================================================================================================
   async resetPassword(dto: ResetPasswordDto) {
     //! log reset password attempt
     this.logger.log(`reset password attempt:${dto.email}`, `AuthService`);
