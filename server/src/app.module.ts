@@ -14,6 +14,8 @@ import { mailConfig } from './common/config/mail.config';
 import { NotificationModule } from './modules/notification/notification.module';
 import { RmqService } from './common/services/rmq/rmq.service';
 import { rmqConfig } from './common/config/rmq.config';
+import { AiModule } from './modules/ai/ai.module';
+import { AiService } from './modules/ai/ai.service';
 
 @Module({
   imports: [
@@ -28,9 +30,10 @@ import { rmqConfig } from './common/config/rmq.config';
     commonModule,
     RateLimitModule,
     NotificationModule,
+    AiModule,
     
   ],
   controllers: [AppController],
-  providers: [AppService, RmqService],
+  providers: [AppService, RmqService, AiService],
 })
 export class AppModule {}

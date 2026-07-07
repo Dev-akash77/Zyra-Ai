@@ -115,6 +115,8 @@ export class AuthService {
 
       return newUser;
     });
+    console.log('==================================================== profile table');
+    
 
     const { password, ...safeUser } = result;
 
@@ -134,6 +136,8 @@ export class AuthService {
       name: result.name,
       email: result.email,
     });
+    console.log('==================================================== notification table');
+
 
     this.logger.log(
       `Welcome email event queued for ${result.email}`,
