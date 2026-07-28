@@ -1,20 +1,38 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { ConfigService } from '@nestjs/config';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf'
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { Pinecone } from '@pinecone-database/pinecone';
+import { PineconeStore } from '@langchain/pinecone';
 
 @Injectable()
 export class AiService {
   private readonly llm: ChatGoogleGenerativeAI;
+  private readonly embeddings:GoogleGenerativeAIEmbeddings;
+  private pinecone: Pinecone;
+  private pineconeIndexName: string;
 
   constructor(private readonly configService: ConfigService) {
+    const googleApikey = this.configService.get<string>('GOOGLE_API_KEY')
+    const pineconeApiKey = this.configService.get<string>('PINECONE_API_KEY')||'';
+    this.pineconeIndexName = this.configService.get<string>('PINECONE_INDEX_NAME')!;
+
+
     this.llm = new ChatGoogleGenerativeAI({
       model: 'gemini-2.5-flash',
-      apiKey: this.configService.get<string>('GOOGLE_API_KEY'),
+      apiKey: googleApikey,
       temperature: 0.3,
     });
+
+    this.embeddings = new GoogleGenerativeAIEmbeddings({
+      model: 'text-embedding-004',
+      apiKey: googleApikey,
+    });
+
+    this.pinecone = new Pinecone({apiKey:pineconeApiKey});
+
   }
 
   //  ! test templete
@@ -53,7 +71,7 @@ export class AiService {
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,
         chunkOverlap: 200,
-      });
+      }); 
 
       const chunk = await splitter.splitDocuments(docs);
 
@@ -63,6 +81,25 @@ export class AiService {
       console.error('PDF Chunking Error:', error);
       throw new InternalServerErrorException(
         'PDF parse ya chunk karne mein error aayi.');
+    }
+  }
+
+
+  // ! strore in vector db
+  async processAndStorePdf(fileBuffer:Buffer){
+    try {
+      const chunk = await this.parseAndChunkPdf(fileBuffer);
+      const pineconeIndex = this.pinecone.Index(this.pineconeIndexName);
+
+      await PineconeStore.fromDocuments(chunk,this.embeddings,{
+        pineconeIndex,
+        maxConcurrency:5
+      });
+
+      return { message: 'PDF successfully processed aur Pinecone DB mein save ho gayi!' };
+    } catch (error) {
+      console.error('Pinecone Store Error:', error);
+      throw new InternalServerErrorException('pinecone store error');
     }
   }
 }
