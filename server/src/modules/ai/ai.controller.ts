@@ -35,14 +35,9 @@ export class AiController {
       return { success: false, message: 'Koi PDF file upload nahi ki gayi.' };
     }
 
-    // AiService call karke buffer pass kar rahe hain
-    const chunks = await this.aiService.parseAndChunkPdf(file.buffer);
-
-    return { 
-      success: true, 
-      totalChunks: chunks.length,
-      message: 'Chunks successfully create ho gaye, inhe verify karein!',
-      data: chunks 
-    };
+    const result = await this.aiService.processAndStorePdf(file.buffer);
+    return { success: true, ...result };
   }
-} // <-- Class ka closing bracket yahan sabse aakhir mein hona chahiye
+} 
+
+ 
