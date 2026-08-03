@@ -10,13 +10,13 @@ import { PineconeStore } from '@langchain/pinecone';
 @Injectable()
 export class AiService {
   private readonly llm: ChatGoogleGenerativeAI;
-  private readonly embeddings:GoogleGenerativeAIEmbeddings;
+  private readonly embeddings: GoogleGenerativeAIEmbeddings;
   private pinecone: Pinecone;
   private pineconeIndexName: string;
 
   constructor(private readonly configService: ConfigService) {
     const googleApikey = this.configService.get<string>('GOOGLE_API_KEY')
-    const pineconeApiKey = this.configService.get<string>('PINECONE_API_KEY')||'';
+    const pineconeApiKey = this.configService.get<string>('PINECONE_API_KEY') || '';
     this.pineconeIndexName = this.configService.get<string>('PINECONE_INDEX_NAME')!;
 
 
@@ -31,7 +31,7 @@ export class AiService {
       apiKey: googleApikey,
     });
 
-    this.pinecone = new Pinecone({apiKey:pineconeApiKey});
+    this.pinecone = new Pinecone({ apiKey: pineconeApiKey });
 
   }
 
@@ -61,17 +61,17 @@ export class AiService {
 
 
   // ! upload file
-  async parseAndChunkPdf(fileBuffer:Buffer){
+  async parseAndChunkPdf(fileBuffer: Buffer) {
     try {
-     const blob = new Blob([new Uint8Array(fileBuffer)], { type: 'application/pdf' });  
-     
-     const loader = new PDFLoader(blob);
+      const blob = new Blob([new Uint8Array(fileBuffer)], { type: 'application/pdf' });
+
+      const loader = new PDFLoader(blob);
       const docs = await loader.load();
 
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,
         chunkOverlap: 200,
-      }); 
+      });
 
       const chunk = await splitter.splitDocuments(docs);
 
@@ -86,14 +86,14 @@ export class AiService {
 
 
   // ! strore in vector db
-  async processAndStorePdf(fileBuffer:Buffer){
+  async processAndStorePdf(fileBuffer: Buffer) {
     try {
       const chunk = await this.parseAndChunkPdf(fileBuffer);
       const pineconeIndex = this.pinecone.Index(this.pineconeIndexName);
 
-      await PineconeStore.fromDocuments(chunk,this.embeddings,{
+      await PineconeStore.fromDocuments(chunk, this.embeddings, {
         pineconeIndex,
-        maxConcurrency:5
+        maxConcurrency: 5
       });
 
       return { message: 'PDF successfully processed aur Pinecone DB mein save ho gayi!' };
@@ -102,4 +102,36 @@ export class AiService {
       throw new InternalServerErrorException('pinecone store error');
     }
   }
+
+  //!query pdf
+  async queryPdf(query: string) {
+    try {
+      const pineconeIndex = this.pinecone.Index(this.pineconeIndexName);
+      const vectorStore = await PineconeStore.fromExistingIndex(this.embeddings, {
+        pineconeIndex,
+        textKey: 'text',
+      });
+
+      const relevantDocs = await vectorStore.similaritySearch(query, 3);
+      const context = relevantDocs.map((doc) => doc.pageContent).join('\n\n---\n\n');
+      const prompt = ChatPromptTemplate.fromMessages([
+        [
+          'system',
+          'You are a highly professional and technical AI assistant name ZYRA AI. Answer all questions directly, accurately, and without unnecessary conversational filler. Keep it concise.',
+        ],
+        ['human', `Context:
+        ${context}\n\nQuestion: {input}`],
+      ]);
+
+      const chain = prompt.pipe(this.llm);
+
+      //send context and query to llm
+      const answer = await chain.invoke({ input: query ,context: context});
+      return answer.content.toString();
+   } catch (error) {
+      console.error('Query PDF Error:', error);
+      throw new InternalServerErrorException('PDF query karne mein error aayi.');
+    }
+  }
 }
+
