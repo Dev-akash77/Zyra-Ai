@@ -84,7 +84,6 @@ export class AiService {
     }
   }
 
-
   // ! strore in vector db
   async processAndStorePdf(fileBuffer: Buffer) {
     try {
@@ -133,5 +132,6 @@ export class AiService {
       throw new InternalServerErrorException('PDF query karne mein error aayi.');
     }
   }
+
 }
 
