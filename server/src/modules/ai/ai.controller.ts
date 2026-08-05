@@ -26,7 +26,7 @@ export class AiController {
   }
 
   // Yahan se route class ke ANDAR hai
-  @Post('pdf/chunk')
+  @Post('pdf/chunk') 
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   async uploadPdfAndViewChunks(@UploadedFile() file: Express.Multer.File) {
@@ -35,7 +35,7 @@ export class AiController {
       return { success: false, message: 'Koi PDF file upload nahi ki gayi.' };
     }
 
-    const result = await this.aiService.processAndStorePdf(file.buffer);
+    const result = await this.aiService.parseAndChunkPdf(file.buffer);
     return { success: true, ...result };
   }
 
