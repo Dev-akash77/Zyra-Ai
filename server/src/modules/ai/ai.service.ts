@@ -35,9 +35,9 @@ export class AiService {
     
     // ! embedding model (wrong) ======================================================================================
     this.embeddings = new GoogleGenerativeAIEmbeddings({
-      model: 'text-embedding-004',
+      model: 'gemini-embedding-001',
       apiKey: googleApikey,
-    });
+    }); 
     // ?!===========================================================================================================
     
     // ? pinecon ======================================================================================
@@ -85,6 +85,7 @@ export class AiService {
 
       const chunk = await splitter.splitDocuments(docs);
 
+
       return chunk;
     } catch (error) {
       console.error('PDF Chunking Error:', error);
@@ -93,6 +94,7 @@ export class AiService {
       );
     }
   }
+
 
   // *----------------------------------------------------------------------------------------------------------
   // ! strore in vector db
@@ -156,4 +158,5 @@ export class AiService {
       );
     }
   }
+
 }

@@ -35,8 +35,8 @@ export class AiController {
       return { success: false, message: 'Koi PDF file upload nahi ki gayi.' };
     }
 
-    const result = await this.aiService.parseAndChunkPdf(file.buffer);
-    return { success: true, ...result };
+    const result = await this.aiService.processAndStorePdf(file.buffer);
+    return { success: true, ...result }; 
   }
 
   @Post('pdf/query')
