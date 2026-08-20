@@ -19,12 +19,17 @@ import {
   LLM_TOKEN,
 } from './infrastructure/rag/service/gemini/gemini-llm.adapter';
 import { VECTOR_STORE_TOKEN } from './application/rag/port/outbound/vector-store.port';
+import { GeminiEmbeddingProvider } from './infrastructure/rag/provider/gemini-embedding.provider';
+import { geminiEmbeddingConfig } from './infrastructure/rag/config/gemini-embedding-model.config';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [
+    ConfigModule.forFeature(geminiEmbeddingConfig),
+  ],
   providers: [ 
     IngestDocumentUseCase,
     QueryDocumentUseCase,
+    GeminiEmbeddingProvider,
 
     {
       provide: DOCUMENT_PARSER_TOKEN,

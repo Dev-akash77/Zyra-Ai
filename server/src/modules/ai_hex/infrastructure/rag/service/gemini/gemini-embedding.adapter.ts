@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { EmbeddingPort } from '../../../../application/rag/port/outbound/embedding.port';
+import { EMBEDDING_PORT } from '../../provider/gemini-embedding.provider';
 
 @Injectable()
 export class GeminiEmbeddingAdapter implements EmbeddingPort {
-  private readonly embeddings: GoogleGenerativeAIEmbeddings;
   
-  constructor(private readonly configService: ConfigService) {
-    this.embeddings = new GoogleGenerativeAIEmbeddings({
-      model: 'gemini-embedding-001',
-      apiKey: this.configService.get<string>('GOOGLE_API_KEY'),
-    });
-  }
+  constructor(private readonly configService: ConfigService,
+    @Inject(EMBEDDING_PORT)
+    private readonly embeddings: GoogleGenerativeAIEmbeddings
+  ) 
+
+  {}
 
   async generateEmbedding(text: string): Promise<number[]> {
     return this.embeddings.embedQuery(text);
