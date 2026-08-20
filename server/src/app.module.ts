@@ -18,7 +18,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { AiService } from './modules/ai/ai.service';
 import { AiModuleHex } from './modules/ai_hex/ai.module';
 
-@Module({
+@Module({ 
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,

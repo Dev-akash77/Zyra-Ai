@@ -9,7 +9,6 @@ import { DOCUMENT_PARSER_TOKEN } from '../../../infrastructure/rag/service/pdf/p
 
 @Injectable()
 export class IngestDocumentUseCase
-  implements IngestDocumentPort
 {
   constructor(
     @Inject(DOCUMENT_PARSER_TOKEN) private readonly documentParser: DocumentParserPort,

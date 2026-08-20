@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 
@@ -12,6 +13,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { QueryPdfDto } from '../dto/query-pdf.dto';
 import { IngestDocumentUseCase } from '../../../application/rag/usecase/ingest-document.use-case';
 import { QueryDocumentUseCase } from '../../../application/rag/usecase/query-document.use-case';
+import { JwtAuthGuard } from '../../../../../common/guards/jwt-auth.guard';
+import { success_message } from '../../../../../common/decorators/success-message.decorators';
 
 @Controller('ai/rag')
 export class RagController {
@@ -21,6 +24,8 @@ export class RagController {
   ) {}
 
   @Post('pdf/chunk')
+  @UseGuards(JwtAuthGuard)
+  @success_message('PDF ingested successfully')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   async uploadPdf( @UploadedFile() file: Express.Multer.File) {
@@ -40,6 +45,8 @@ export class RagController {
   }
 
   @Post('pdf/query')
+  @UseGuards(JwtAuthGuard)
+  @success_message('Query executed successfully')
   @HttpCode(HttpStatus.OK)
   async queryPdf(@Body() dto: QueryPdfDto) {
     

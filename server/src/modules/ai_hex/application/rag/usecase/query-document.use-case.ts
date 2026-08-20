@@ -7,7 +7,6 @@ import { LLM_TOKEN } from '../../../infrastructure/rag/service/gemini/gemini-llm
 
 @Injectable()
 export class QueryDocumentUseCase
-  implements QueryDocumentPort
 {
   constructor(
     @Inject(VECTOR_STORE_TOKEN) private readonly vectorStore: VectorStorePort,
