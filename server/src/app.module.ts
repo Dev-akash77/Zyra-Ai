@@ -17,13 +17,21 @@ import { rmqConfig } from './common/config/rmq.config';
 import { AiModule } from './modules/ai/ai.module';
 import { AiService } from './modules/ai/ai.service';
 import { AiModuleHex } from './modules/ai_hex/ai.module';
+import { geminiLlmConfig } from './common/config/gemini-llm.config';
 
-@Module({ 
+@Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [jwtConfig, redisConfig,cloudinaryConfig,mailConfig,rmqConfig],
+      load: [
+        jwtConfig,
+        redisConfig,
+        cloudinaryConfig,
+        mailConfig,
+        rmqConfig,
+        geminiLlmConfig,
+      ],
     }),
     DatabaseModule,
     AuthModule,
@@ -32,7 +40,7 @@ import { AiModuleHex } from './modules/ai_hex/ai.module';
     RateLimitModule,
     NotificationModule,
     AiModule,
-    AiModuleHex
+    AiModuleHex,
   ],
   controllers: [AppController],
   providers: [AppService, RmqService, AiService],

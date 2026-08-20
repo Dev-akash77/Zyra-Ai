@@ -1,7 +1,0 @@
-1. jwt Guard (in every controller)
-2. gemini LLM(`gemini-2.5-flash`) global config
-3. gemini embedding service -> infrastructure - config
-4. logging  application(usecase) -> after every function call
-5. pinecone data store and similarity search infrastructure(db)
-6. usecase only use contract as an interface (not port)
-7. port only use domain as an interface

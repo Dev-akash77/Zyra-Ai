@@ -1,28 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { LlmPort } from '../../../../application/rag/port/outbound/llm.port';
+import { injection_token } from '../../../../../../common/constants/injection/injection.token';
 
 
 @Injectable()
 export class GeminiLlmAdapter
   implements LlmPort
 {
-  private readonly llm: ChatGoogleGenerativeAI;
 
   constructor(
     private readonly configService: ConfigService,
-  ) {
-    this.llm = new ChatGoogleGenerativeAI({
-      model: 'gemini-2.5-flash',
-      apiKey:
-        this.configService.get<string>(
-          'GOOGLE_API_KEY',
-        ),
-      temperature: 0.3,
-    });
-  }
+    @Inject(injection_token.LLM_TOKEN) 
+    private readonly llm: ChatGoogleGenerativeAI,
+  ) {}
 
   async generate(
     prompt: string,
