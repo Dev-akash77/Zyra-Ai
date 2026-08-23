@@ -1,5 +1,6 @@
 import { DocumentChunk } from "../../../../domain/rag/document-chunk.entity";
-import { RetrievalSource } from "../../contract/query-document.contract";
+import { RetrievalSource } from "../../../../domain/rag/retrieval-source.entity";
+
 
 export interface VectorStorePort {
   store(

@@ -11,7 +11,7 @@ import {
 } from '../gemini/gemini-embedding.adapter';
 import { DocumentChunk } from '../../../../domain/rag/document-chunk.entity';
 import { VectorStorePort } from '../../../../application/rag/port/outbound/vector-store.port';
-import { RetrievalSource } from '../../../../application/rag/contract/query-document.contract';
+import { RetrievalSource } from '../../../../domain/rag/retrieval-source.entity';
 
 @Injectable()
 export class PineconeVectorStoreAdapter implements VectorStorePort {

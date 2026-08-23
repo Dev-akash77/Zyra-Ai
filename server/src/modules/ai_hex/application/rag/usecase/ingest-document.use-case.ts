@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { type DocumentParserPort  } from '../port/outbound/document-parser.port';
 import { VECTOR_STORE_TOKEN, type VectorStorePort } from '../port/outbound/vector-store.port';
-import { IngestDocumentPort } from '../port/inbound/ingest-document.port';
 import { IngestDocumentCommand, IngestDocumentResult } from '../contract/ingest-document.contract';
 import { Document } from '../../../domain/rag/document.entity';
 import { DOCUMENT_PARSER_TOKEN } from '../../../infrastructure/rag/service/pdf/pdf-parser.adapter';
