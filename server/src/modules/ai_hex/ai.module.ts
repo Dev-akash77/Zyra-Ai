@@ -6,30 +6,32 @@ import { QueryDocumentUseCase } from './application/rag/usecase/query-document.u
 import {
   DOCUMENT_PARSER_TOKEN,
   PdfParserAdapter,
-} from './infrastructure/rag/service/pdf/pdf-parser.adapter';
+} from './infrastructure/rag/adapter/pdf/pdf-parser.adapter';
 import {
   EMBEDDING_TOKEN,
   GeminiEmbeddingAdapter,
-} from './infrastructure/rag/service/gemini/gemini-embedding.adapter';
-import {
-  PineconeVectorStoreAdapter
-} from './infrastructure/rag/service/pinecone/pinecone-vector-store.adapter';
+} from './infrastructure/rag/adapter/gemini/gemini-embedding.adapter';
+import { PineconeVectorStoreAdapter } from './infrastructure/rag/adapter/db/pinecone/pinecone-vector-store.adapter';
 import {
   GeminiLlmAdapter,
   LLM_TOKEN,
-} from './infrastructure/rag/service/gemini/gemini-llm.adapter';
-import { VECTOR_STORE_TOKEN } from './application/rag/port/outbound/vector-store.port';
+} from './infrastructure/rag/adapter/gemini/gemini-llm.adapter';
+import { VECTOR_STORE_TOKEN } from './application/rag/port/vector-store.port';
 import { GeminiEmbeddingProvider } from './infrastructure/rag/provider/gemini-embedding.provider';
 import { geminiEmbeddingConfig } from './infrastructure/rag/config/gemini-embedding-model.config';
+import { PineconeProvider } from './infrastructure/rag/provider/pineconde.provider';
+import { pineconeDatabaseConfig } from './infrastructure/rag/config/pinecone-database.config';
 
 @Module({
   imports: [
     ConfigModule.forFeature(geminiEmbeddingConfig),
+    ConfigModule.forFeature(pineconeDatabaseConfig),
   ],
-  providers: [ 
+  providers: [
     IngestDocumentUseCase,
     QueryDocumentUseCase,
     GeminiEmbeddingProvider,
+    PineconeProvider,
 
     {
       provide: DOCUMENT_PARSER_TOKEN,
