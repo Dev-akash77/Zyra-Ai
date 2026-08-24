@@ -2,13 +2,17 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import { DocumentParserPort } from '../../../../application/rag/port/outbound/document-parser.port';
+import { DocumentParserPort } from '../../../../application/rag/port/document-parser.port';
 import { DocumentChunk } from '../../../../domain/rag/document-chunk.entity';
+import { MyLoggerService } from '../../../../../../common/services/logger/logger.service';
 
 @Injectable()
 export class PdfParserAdapter implements DocumentParserPort {
+    constructor(private readonly logger: MyLoggerService) {}
   async parse(file: Buffer, documentId: string): Promise<DocumentChunk[]> {
     try {
+
+        this.logger.log(`Parsing PDF document with ID: ${documentId}`, 'PdfParserAdapter');
       const blob = new Blob([new Uint8Array(file)], {
         type: 'application/pdf',
       });
@@ -35,7 +39,7 @@ export class PdfParserAdapter implements DocumentParserPort {
           ),
       );
     } catch (error) {
-      console.error('PDF parsing error:', error);
+      this.logger.error('PDF parsing error:', 'PdfParserAdapter');
 
       throw new InternalServerErrorException('PDF parsing failed.');
     }

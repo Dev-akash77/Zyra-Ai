@@ -6,6 +6,7 @@ import { CacheService } from '../services/caching/cache.service';
 import { CloudnirayProvider } from '../providers/cloudinary.provider';
 import { RmqProvider } from '../providers/rmq.provider';
 import { RmqService } from '../services/rmq/rmq.service';
+import { GeminiLlmProvider } from '../providers/gemini-llm.provider';
 
 @Global()
 @Module({
@@ -17,6 +18,7 @@ import { RmqService } from '../services/rmq/rmq.service';
     CloudnirayProvider,
     RmqProvider,
     RmqService,
+    GeminiLlmProvider
   ],
   exports: [
     MyLoggerService,
@@ -26,6 +28,7 @@ import { RmqService } from '../services/rmq/rmq.service';
     CloudnirayProvider,
     RmqProvider,
     RmqService,
+    GeminiLlmProvider
   ],
 })
 export class commonModule {}

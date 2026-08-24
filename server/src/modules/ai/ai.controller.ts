@@ -37,7 +37,7 @@ export class AiController {
 
     const result = await this.aiService.processAndStorePdf(file.buffer);
     return { success: true, ...result }; 
-  }
+  } 
 
   @Post('pdf/query')
   @HttpCode(HttpStatus.OK)
@@ -47,4 +47,3 @@ export class AiController {
   }
 } 
 
- 
