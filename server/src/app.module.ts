@@ -14,14 +14,12 @@ import { mailConfig } from './common/config/mail.config';
 import { NotificationModule } from './modules/notification/notification.module';
 import { RmqService } from './common/services/rmq/rmq.service';
 import { rmqConfig } from './common/config/rmq.config';
-import { AiModule } from './modules/ai/ai.module';
-import { AiService } from './modules/ai/ai.service';
-import { AiModuleHex } from './modules/ai_hex/ai.module';
+import { AiModuleHex } from './modules/ai/ai.module';
 import { geminiLlmConfig } from './common/config/gemini-llm.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
+  ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       load: [
@@ -39,10 +37,9 @@ import { geminiLlmConfig } from './common/config/gemini-llm.config';
     commonModule,
     RateLimitModule,
     NotificationModule,
-    AiModule,
     AiModuleHex,
   ],
   controllers: [AppController],
-  providers: [AppService, RmqService, AiService],
+  providers: [AppService, RmqService],
 })
 export class AppModule {}

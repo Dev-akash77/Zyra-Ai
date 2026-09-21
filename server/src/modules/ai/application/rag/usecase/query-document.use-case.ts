@@ -16,7 +16,7 @@ export class QueryDocumentUseCase {
   constructor(
     @Inject(VECTOR_STORE_TOKEN) private readonly vectorStore: VectorStorePort,
     @Inject(LLM_TOKEN) private readonly llm: LlmPort,
-    private readonly logger: MyLoggerService
+    private readonly logger: MyLoggerService,
   ) {}
 
   async execute(command: QueryDocumentCommand): Promise<QueryDocumentResult> {
@@ -24,9 +24,15 @@ export class QueryDocumentUseCase {
       const limit = command.limit ?? 3;
 
       const sources = await this.vectorStore.search(command.query, limit);
-      this.logger.log(`Retrieved ${sources.length} sources from vector store`, 'QueryDocumentUseCase');
+      this.logger.log(
+        `Retrieved ${sources.length} sources from vector store`,
+        'QueryDocumentUseCase',
+      );
 
-      this.logger.log('Generating response using LLM...', 'QueryDocumentUseCase');
+      this.logger.log(
+        'Generating response using LLM...',
+        'QueryDocumentUseCase',
+      );
 
       const context = sources
         .map((source) => source.content)
@@ -46,14 +52,20 @@ export class QueryDocumentUseCase {
                 Answer directly and concisely. `;
 
       const answer = await this.llm.generate(prompt);
-      this.logger.log('Response generated successfully', 'QueryDocumentUseCase');
+      this.logger.log(
+        'Response generated successfully',
+        'QueryDocumentUseCase',
+      );
 
       return {
         answer,
         sources,
       };
     } catch (error) {
-      this.logger.error('Error executing QueryDocumentUseCase:', 'QueryDocumentUseCase');
+      this.logger.error(
+        'Error executing QueryDocumentUseCase:',
+        'QueryDocumentUseCase',
+      );
       throw error;
     }
   }

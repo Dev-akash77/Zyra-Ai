@@ -13,7 +13,7 @@ export class GeminiEmbeddingAdapter implements EmbeddingPort {
     @Inject(EMBEDDING_PORT)
     private readonly embeddings: GoogleGenerativeAIEmbeddings,
     private readonly logger: MyLoggerService
-  ) 
+  )  
 
   {}
 
