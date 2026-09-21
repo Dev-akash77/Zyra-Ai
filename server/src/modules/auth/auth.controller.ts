@@ -28,7 +28,7 @@ export class AuthController {
   userRegistration(@Body() dto: RegisterDto) {
     return this.authService.registerUser(dto);
   }
-
+ 
   // ! Login Port
   @Post('login')
   @RateLimit(RATE_LIMITS.LOGIN)

@@ -31,7 +31,7 @@ export class IngestDocumentUseCase {
       );
 
       const chunks = await this.documentParser.parse(command.file, document.id);
-      this.logger.log('document chunks parsed', 'IngestDocumentUseCase');
+      this.logger.log(`document chunks Created ${chunks.length}`, 'IngestDocumentUseCase');
 
       await this.vectorStore.store(chunks);
       this.logger.log(
