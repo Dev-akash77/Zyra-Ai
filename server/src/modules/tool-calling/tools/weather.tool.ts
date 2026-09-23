@@ -54,7 +54,7 @@ export const weatherTool = tool(
     return await fetchWeather(city);
   },
   {
-    name: 'weather Tool',
+    name: 'weather_Tool',
     description:
       'Get the current weather information for a city, including temperature, humidity, wind speed, and weather description.',
     schema: z.object({

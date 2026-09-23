@@ -15,6 +15,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { RmqService } from './common/services/rmq/rmq.service';
 import { rmqConfig } from './common/config/rmq.config';
 import { AiModuleHex } from './modules/ai/ai.module';
+import { OrchestratorModule } from './modules/tool-calling/orchestrator.module';
 import { geminiLlmConfig } from './common/config/gemini-llm.config';
 
 @Module({
@@ -38,6 +39,7 @@ import { geminiLlmConfig } from './common/config/gemini-llm.config';
     RateLimitModule,
     NotificationModule,
     AiModuleHex,
+    OrchestratorModule
   ],
   controllers: [AppController],
   providers: [AppService, RmqService],
