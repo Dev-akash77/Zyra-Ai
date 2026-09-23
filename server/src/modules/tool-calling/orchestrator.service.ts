@@ -5,7 +5,7 @@ import { zyraApp } from './orchestrator/orchestrator.graph';
 
 @Injectable()
 export class OrchestratorService {
-  async executeQuery(userQuery: string, threadId: string = 'session-default') {
+  async executeQuery(userQuery: string, threadId: string = 'session-default',userId:string='user-1') {
     try {
       const config = {
         configurable: { thread_id: threadId },
@@ -15,6 +15,7 @@ export class OrchestratorService {
       const result = await zyraApp.invoke(
         {
           messages: [new HumanMessage(userQuery)],
+          userId:userId
         },
         config
       );

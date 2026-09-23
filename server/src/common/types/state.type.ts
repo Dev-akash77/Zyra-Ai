@@ -39,6 +39,11 @@ export const ZyraState = Annotation.Root({
         default:()=>"",
     }),
 
+    userId: Annotation<string>({
+    reducer: (_, update) => update,
+    default: () => "user-1",
+  }),
+
     //the completed final response for the user
     finalResponse:Annotation<string>({
         reducer:(_,update)=>update,

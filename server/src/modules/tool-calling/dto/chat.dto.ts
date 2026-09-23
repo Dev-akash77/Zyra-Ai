@@ -8,4 +8,9 @@ export class ChatRequestDto {
   @IsString()
   @IsOptional()
   threadId?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  userId?:string
+
 }
