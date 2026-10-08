@@ -11,18 +11,14 @@ export class MyLoggerService implements LoggerService {
   constructor() {
     const logDir = path.join(process.cwd(), 'logs');
 
-    // ! Create logs folder if not exists
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
 
-    //!  Level Filter (STRICT separation)
     const levelFilter = (level: string) =>
-      winston.format((info) => {
-        return info.level === level ? info : false;
-      })();
+      winston.format((info) => (info.level === level ? info : false))();
 
-    //!  Console Format (NestJS Style)
+    //! Console Format (NestJS Style)
     const consoleFormat = winston.format.printf((info) => {
       const { level, message, timestamp } = info;
       const msg = String(message);
@@ -48,7 +44,6 @@ export class MyLoggerService implements LoggerService {
       };
 
       const levelText = levelMap[level] || level.toUpperCase();
-
       const levelColor =
         level === 'error' ? red : level === 'warn' ? yellow : green;
 
@@ -56,21 +51,23 @@ export class MyLoggerService implements LoggerService {
       let context = '';
       let actualMessage = msg;
 
-      const match = msg.match(/^\[(.*?)\]\s*(.*)/);
+      const match = msg.match(/^\[(.*?)\]\s*(.*)/s);
       if (match) {
         context = match[1];
         actualMessage = match[2];
       }
 
+      // Single-line NestJS console style
       return (
-        `${green}[Nest] ${pid}${reset} - ${gray}${timestamp}${reset} ` +
+        `${green}[Nest] ${pid}${reset}  - ` +
+        `${gray}${timestamp}${reset} ` +
         `${levelColor}${levelText}${reset} ` +
-        `${yellow}[${context}]${reset} ` +
+        (context ? `${yellow}[${context}]${reset} ` : '') +
         `${green}${actualMessage}${reset} ${gray}+${diff}ms${reset}`
       );
     });
 
-    //!  File Format
+    //! File Format
     const fileFormat = winston.format.combine(
       winston.format.timestamp({
         format: 'YYYY-MM-DD HH:mm:ss',
@@ -81,11 +78,9 @@ export class MyLoggerService implements LoggerService {
       }),
     );
 
-    //!  Logger Setup
     this.logger = winston.createLogger({
       level: 'debug',
       transports: [
-        // !Console
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.timestamp({
@@ -94,20 +89,14 @@ export class MyLoggerService implements LoggerService {
             consoleFormat,
           ),
         }),
-
-        // ! ONLY INFO
         new winston.transports.File({
           filename: path.join(logDir, 'info.log'),
           format: winston.format.combine(levelFilter('info'), fileFormat),
         }),
-
-        //! ONLY WARN
         new winston.transports.File({
           filename: path.join(logDir, 'warn.log'),
           format: winston.format.combine(levelFilter('warn'), fileFormat),
         }),
-
-        // !ONLY ERROR
         new winston.transports.File({
           filename: path.join(logDir, 'error.log'),
           format: winston.format.combine(levelFilter('error'), fileFormat),
@@ -115,45 +104,61 @@ export class MyLoggerService implements LoggerService {
       ],
     });
 
-    // ! Test log (optional)
     this.logger.info('[Logger] Logger initialized');
   }
 
-  //! Info
-  log(message: string, context?: string) {
-    this.logger.info(this.formatMessage(message, context));
+  log(message: any, context?: string) {
+    this.logger.info(this.formatMessage(this.resolveMessage(message), context));
   }
 
-  //! Warn
-  warn(message: string, context?: string) {
-    this.logger.warn(this.formatMessage(message, context));
+  warn(message: any, context?: string) {
+    this.logger.warn(this.formatMessage(this.resolveMessage(message), context));
   }
 
-  //! Debug
-  debug(message: string, context?: string) {
-    this.logger.debug(this.formatMessage(message, context));
+  debug(message: any, context?: string) {
+    this.logger.debug(this.formatMessage(this.resolveMessage(message), context));
   }
 
-  //! Error (cleaned)
-  error(message: string, trace?: string, context?: string) {
-    let cleanMessage = message;
+  //! Error (handles Error instances, objects, and strings)
+  error(message: any, trace?: string, context?: string) {
+    let cleanMessage = this.resolveMessage(message);
 
-    //! Handle Redis errors nicely
-    if (message.includes('ECONNREFUSED')) {
-      const match = message.match(/ECONNREFUSED\s([\d.:]+)/);
+    // Handle Redis / network ECONNREFUSED
+    if (cleanMessage.includes('ECONNREFUSED')) {
+      const match = cleanMessage.match(/ECONNREFUSED\s([\d.:]+)/);
       if (match) {
         cleanMessage = `Unable to connect (ECONNREFUSED) at ${match[1]}`;
       }
     }
 
-    //! Remove stack noise
+    // Strip multiline stack trace from the single-line summary if present
     cleanMessage = cleanMessage.split('\n')[0];
 
-    this.logger.error(this.formatMessage(cleanMessage, context));
+    // If context was passed in trace parameter (common NestJS signature: error(msg, context))
+    const resolvedContext = context ?? (typeof trace === 'string' && !trace.includes('\n') ? trace : undefined);
+
+    this.logger.error(this.formatMessage(cleanMessage, resolvedContext));
   }
 
-  //! Format message with context
-  private formatMessage(message: string, context?: string) {
-    return context ? `[${context}] ${message}` : message;
+  /**
+   * Safely converts strings, Error objects, or JSON objects into a string
+   */
+  private resolveMessage(message: any): string {
+    if (message instanceof Error) {
+      return message.message || message.name || 'Unknown Error';
+    }
+    if (typeof message === 'object' && message !== null) {
+      try {
+        return JSON.stringify(message);
+      } catch {
+        return '[Unserializable Object]';
+      }
+    }
+    return String(message ?? '');
   }
-}
+
+  private formatMessage(message: string, context?: string): string {
+    return context ? `[${context}] ${message}` : message;   
+  }
+} 
+

@@ -1,28 +1,56 @@
-services:
+version: '3.8'
 
-#? -----------------------------REDIS------------------------------------
- redis:
+services:
+  #? ----------------------------- ZYRA NESTJS APP -----------------------------
+  zyra-app:
+    container_name: zyra_app
+    build:
+      context: .
+      target: development
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./:/app
+      - node_modules_data:/app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: npm run start:dev
+
+  #? ----------------------------- REDIS ------------------------------------
+  redis:
     image: redis/redis-stack:latest
     container_name: redis
     ports:
-      - "6379:6379" # app connection
-      - "8001:8001" # GUI
+      - '6379:6379' # app connection
+      - '8001:8001' # GUI
     networks:
       - app-network
+    restart: unless-stopped
 
-  #? --------------------RabitMQ--------------------------------------
- rabbitmq:
-  image: rabbitmq:3-management
-  container_name: rabbitmq
-  ports:
-      - "5672:5672"   # app connection
-      - "15672:15672" # GUI
-  environment:
+  #? -------------------- RabbitMQ --------------------------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - '5672:5672' # app connection
+      - '15672:15672' # GUI
+    environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=admin123
-  networks:
+    networks:
       - app-network
+    restart: unless-stopped
+
 # ? ========================================================================================
+
+volumes:
+  node_modules_data:
 
 networks:
   app-network:
