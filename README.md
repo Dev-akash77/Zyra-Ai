@@ -575,7 +575,7 @@ unrelated changes.
 
 ## 👥 Team
 
-Zyra AI is being developed collaboratively by a team of six.
+Zyra AI is being developed collaboratively by a team of three.
 
 We are exploring the intersection of AI application engineering, backend
 architecture, retrieval systems, and autonomous agents through hands-on
