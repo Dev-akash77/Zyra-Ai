@@ -35,7 +35,7 @@ export class PdfParserAdapter implements DocumentParserPort {
             documentId,
             chunk.pageContent,
             index,
-            chunk.metadata ?? {},
+            chunk.metadata ?? {}, 
           ),
       );
     } catch (error) {

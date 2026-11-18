@@ -9,14 +9,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { RoleGuard } from '../../common/guards/role.guard';
 import { NotificationModule } from '../notification/notification.module';
 
- 
 @Module({
   imports: [
     PassportModule,
     NotificationModule,
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
-inject: [jwtConfig.KEY],
+      inject: [jwtConfig.KEY],
       useFactory: (config: ConfigType<typeof jwtConfig>) => ({
         secret: config.secret,
         signOptions: { expiresIn: config.expiresIn as any },

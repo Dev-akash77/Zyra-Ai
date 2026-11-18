@@ -1,3 +1,6 @@
+import * as net from 'node:net';
+net.setDefaultAutoSelectFamily(false);
+
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import 'dotenv/config';
@@ -8,11 +11,12 @@ import { MyLoggerService } from './common/services/logger/logger.service';
 import { RateLimitGuard } from './modules/rate-limit/rate-limit.guard';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
-    new ValidationPipe({
+    new ValidationPipe({ 
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
