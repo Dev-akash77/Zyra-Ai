@@ -33,15 +33,15 @@ export class IngestDocumentUseCase {
       const chunks = await this.documentParser.parse(command.file, document.id);
       this.logger.log(`document chunks Created ${chunks.length}`, 'IngestDocumentUseCase');
 
-      await this.vectorStore.store(chunks);
+      await this.vectorStore.store(chunks,command.userId);
       this.logger.log(
-        'document chunks stored in vector store',
+        `document chunks stored in vector store with userId {${command.userId}}`,
         'IngestDocumentUseCase',
       );
 
       document.markCompleted();
       this.logger.log(
-        'Document ingestion completed successfully.',
+        `Document ingestion completed successfully with userId {${command.userId}}.`,
         'IngestDocumentUseCase',
       );
 

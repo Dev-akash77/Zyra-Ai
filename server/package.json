@@ -70,6 +70,7 @@
     "streamifier": "^0.1.1",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.23.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -88,6 +89,7 @@
     "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.18.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",

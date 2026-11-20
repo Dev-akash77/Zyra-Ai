@@ -1,4 +1,5 @@
 export interface IngestDocumentCommand {
+  userId:string;
   file: Buffer;
   fileName: string;
   mimeType: string;

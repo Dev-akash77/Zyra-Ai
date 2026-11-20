@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -28,29 +29,29 @@ export class RagController {
   @success_message('PDF ingested successfully')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  async uploadPdf( @UploadedFile() file: Express.Multer.File) {
+  async uploadPdf(@Req() req, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
       return {
         success: false,
-        message: 'PDF file is required.'
+        message: 'PDF file is required.',
       };
     }
 
     return await this.ingestDocument.execute({
+      userId: req.user.userId,
       file: file.buffer,
       fileName: file.originalname,
       mimeType: file.mimetype,
     });
-    
   }
 
   @Post('pdf/query')
   @UseGuards(JwtAuthGuard)
   @success_message('Query executed successfully')
   @HttpCode(HttpStatus.OK)
-  async queryPdf(@Body() dto: QueryPdfDto) {
-    
+  async queryPdf(@Req() req, @Body() dto: QueryPdfDto) {
     return await this.queryDocument.execute({
+      userId: req.user.userId,
       query: dto.query,
       limit: 3,
     });
