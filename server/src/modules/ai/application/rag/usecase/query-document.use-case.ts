@@ -23,7 +23,7 @@ export class QueryDocumentUseCase {
     try {
       const limit = command.limit ?? 3;
 
-      const sources = await this.vectorStore.search(command.query, limit);
+      const sources = await this.vectorStore.search(command.query, limit,command.userId,);
       this.logger.log(
         `Retrieved ${sources.length} sources from vector store`,
         'QueryDocumentUseCase',

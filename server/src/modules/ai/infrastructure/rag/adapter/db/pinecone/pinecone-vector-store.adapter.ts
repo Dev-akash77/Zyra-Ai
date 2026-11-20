@@ -25,71 +25,86 @@ export class PineconeVectorStoreAdapter implements VectorStorePort {
     @Inject(EMBEDDING_TOKEN)
     private readonly embeddingAdapter: GeminiEmbeddingAdapter,
     @Inject(PINECONE_PORT)
-    private readonly pineconeProvider: { pinecone: Pinecone; indexName: string },
-    private readonly logger: MyLoggerService
-    
+    private readonly pineconeProvider: {
+      pinecone: Pinecone;
+      indexName: string;
+    },
+    private readonly logger: MyLoggerService,
   ) {
     this.pinecone = pineconeProvider.pinecone;
     this.indexName = pineconeProvider.indexName;
   }
 
-  async store(chunks: DocumentChunk[]): Promise<void> {
-
+  async store(chunks: DocumentChunk[],userId:string): Promise<void> {
     try {
+      this.logger.log(
+        `Storing ${chunks.length} document chunks in Pinecone`,
+        'PineconeVectorStoreAdapter',
+      );
+      const index = this.pinecone.Index(this.indexName);
 
-        this.logger.log(`Storing ${chunks.length} document chunks in Pinecone`, 'PineconeVectorStoreAdapter');
-        const index = this.pinecone.Index(this.indexName);
-        
-        const documents = chunks.map((chunk) => ({
-            pageContent: chunk.content,
-            metadata: {
-                ...chunk.metadata,
-                chunkId: chunk.id,
-                documentId: chunk.documentId,
-                chunkIndex: chunk.chunkIndex,
-            },
-        }));
-        
-        await PineconeStore.fromDocuments(
-            documents,
-            this.embeddingAdapter['embeddings'],
-            {
-                pineconeIndex: index,
-                maxConcurrency: 5,
-            },
-        );
+      const documents = chunks.map((chunk) => ({
+        pageContent: chunk.content,
+        metadata: {
+          ...chunk.metadata,
+          userId,
+          chunkId: chunk.id,
+          documentId: chunk.documentId,
+          chunkIndex: chunk.chunkIndex,
+        },
+      }));
+
+      await PineconeStore.fromDocuments(
+        documents,
+        this.embeddingAdapter['embeddings'],
+        {
+          pineconeIndex: index,
+          maxConcurrency: 5,
+        },
+      );
     } catch (error) {
-      this.logger.error('Error storing document chunks in Pinecone:', 'PineconeVectorStoreAdapter');
+      this.logger.error(
+        'Error storing document chunks in Pinecone:',
+        'PineconeVectorStoreAdapter',
+      );
       throw error;
-    } 
+    }
   }
 
-  async search(query: string, limit: number): Promise<RetrievalSource[]> {
+  async search(query: string, limit: number,userId:string): Promise<RetrievalSource[]> {
+    try {
+      this.logger.log(
+        `Searching for documents in Pinecone`,
+        'PineconeVectorStoreAdapter',
+      );
 
-    try {  
+      const index = this.pinecone.Index(this.indexName);
 
-        this.logger.log(`Searching for documents in Pinecone`, 'PineconeVectorStoreAdapter');
+      const vectorStore = await PineconeStore.fromExistingIndex(
+        this.embeddingAdapter['embeddings'],
+        {
+          pineconeIndex: index,
+          textKey: 'text',
+        },
+      );
 
-        const index = this.pinecone.Index(this.indexName);
-        
-        const vectorStore = await PineconeStore.fromExistingIndex(
-      this.embeddingAdapter['embeddings'],
-      {
-        pineconeIndex: index,
-        textKey: 'text', 
-      },
-    );
+      const documents = await vectorStore.similaritySearchWithScore(
+        query,
+        limit,
+        { userId },
+      );
 
-    const documents = await vectorStore.similaritySearchWithScore(query, limit);
-    
-    return documents.map(([document, score]) => ({
+      return documents.map(([document, score]) => ({
         content: document.pageContent,
         score,
         metadata: document.metadata ?? {},
-    }));
-} catch (error) {
-    this.logger.error('Error searching for documents in Pinecone:', 'PineconeVectorStoreAdapter');
-    throw error;
-}
+      }));
+    } catch (error) {
+      this.logger.error(
+        'Error searching for documents in Pinecone:',
+        'PineconeVectorStoreAdapter',
+      );
+      throw error;
+    }
   }
 }

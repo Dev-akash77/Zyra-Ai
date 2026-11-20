@@ -17,14 +17,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   ) {}
 
   catch(exception: any, host: ArgumentsHost) {
-    // console.error('\n🔥 ACTUAL RAW ERROR 🔥:', exception, '\n'); 
+    console.error('\n🔥 ACTUAL RAW ERROR 🔥:', exception, '\n'); 
     
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>(); 
 
     // ! default values
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR; 
     let errorCode = ErrorCode.INTERNAL_ERROR;
     let message = 'Internal Server Error';
     let errors = [];
