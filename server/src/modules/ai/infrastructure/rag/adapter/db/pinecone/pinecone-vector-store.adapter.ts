@@ -61,12 +61,12 @@ export class PineconeVectorStoreAdapter implements VectorStorePort {
     } catch (error) {
       this.logger.error('Error storing document chunks in Pinecone:', 'PineconeVectorStoreAdapter');
       throw error;
-    }
+    } 
   }
 
   async search(query: string, limit: number): Promise<RetrievalSource[]> {
 
-    try {
+    try {  
 
         this.logger.log(`Searching for documents in Pinecone`, 'PineconeVectorStoreAdapter');
 
@@ -76,7 +76,7 @@ export class PineconeVectorStoreAdapter implements VectorStorePort {
       this.embeddingAdapter['embeddings'],
       {
         pineconeIndex: index,
-        textKey: 'text',
+        textKey: 'text', 
       },
     );
 

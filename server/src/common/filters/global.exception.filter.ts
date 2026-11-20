@@ -17,9 +17,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   ) {}
 
   catch(exception: any, host: ArgumentsHost) {
+    // console.error('\n🔥 ACTUAL RAW ERROR 🔥:', exception, '\n'); 
+    
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
-    const response = ctx.getResponse<Response>();
+    const response = ctx.getResponse<Response>(); 
 
     // ! default values
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -44,6 +46,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception?.stack,
       'GlobalExceptionFilter',
     );
+
+  
 
     // ! send response
     response.status(status).json({

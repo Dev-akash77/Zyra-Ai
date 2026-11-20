@@ -19,4 +19,4 @@ import { MyLoggerService } from '../common/services/logger/logger.service';
   ],
   exports: [injection_token.DB_CONNECTION],
 })
-export class DatabaseModule {}
+export class DatabaseModule {};
